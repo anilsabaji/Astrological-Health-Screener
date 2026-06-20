@@ -470,6 +470,66 @@
     window.print();
   }
 
+  // Collect all CSS currently applied (inline <style> first; linked sheets as fallback).
+  function collectCss() {
+    var css = "";
+    var styles = document.querySelectorAll("style");
+    for (var i = 0; i < styles.length; i++) css += styles[i].textContent + "\n";
+    if (!css.trim()) {
+      for (var s = 0; s < document.styleSheets.length; s++) {
+        try {
+          var rules = document.styleSheets[s].cssRules;
+          for (var j = 0; j < rules.length; j++) css += rules[j].cssText + "\n";
+        } catch (e) { /* cross-origin sheet: skip */ }
+      }
+    }
+    return css;
+  }
+
+  function ymd() {
+    var d = new Date();
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  }
+
+  // One-click self-contained HTML report (vibrant colours, all tabs expanded).
+  function downloadReport() {
+    if ($("results").hidden) {
+      alert("Please generate the screening first, then download.");
+      return;
+    }
+    $("report-date").textContent = "Report generated " + new Date().toLocaleString();
+    renderLetterhead();
+
+    var overrides = "\n/* report export overrides */\n" +
+      "#form-card,.tabs,.report-actions,.qa-examples,#qa-input,#qa-btn,.city-search,.city-results{display:none!important}\n" +
+      "#results{display:block!important}\n.tab-panel{display:block!important}\n" +
+      "body{background:#0e1020}\n" +
+      "*{-webkit-print-color-adjust:exact;print-color-adjust:exact}\n";
+
+    var header = document.querySelector(".site-header").outerHTML;
+    var banner = document.querySelector(".disclaimer-banner");
+    banner = banner ? banner.outerHTML : "";
+    var results = $("results").outerHTML;
+    var footer = document.querySelector(".site-footer");
+    footer = footer ? footer.outerHTML : "";
+
+    var nm = ($("name").value.trim() || "client").replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+    var docHtml = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\">" +
+      "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" +
+      "<title>Astrological Health Report</title><style>" + collectCss() + overrides + "</style></head><body>" +
+      header + banner + "<main class=\"wrap\">" + results + "</main>" + footer + "</body></html>";
+
+    var blob = new Blob([docHtml], { type: "text/html;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "health-report-" + nm + "-" + ymd() + ".html";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+  }
+
   function renderLetterhead() {
     var name = $("lh-name").value.trim();
     var tagline = $("lh-tagline").value.trim();
@@ -584,6 +644,7 @@
     $("qa-input").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); askQuestion(); } });
     renderQAExamples();
     $("print-btn").addEventListener("click", printReport);
+    $("download-btn").addEventListener("click", downloadReport);
     $("lh-logo").addEventListener("change", function (e) {
       var file = e.target.files && e.target.files[0];
       if (!file) { logoDataUrl = null; return; }
