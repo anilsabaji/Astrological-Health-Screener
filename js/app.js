@@ -377,6 +377,44 @@
     });
   }
 
+  function dashaBadge(klass, label) { return "<span class='sev-tag " + klass + "'>" + label + "</span>"; }
+  function dashaMark(cur) { return cur ? "<strong>&#9654;</strong>" : ""; }
+
+  function renderParaSchedule(s) {
+    var fd = dasha.fmtDate;
+    var md = $("par-md-table").querySelector("tbody"); md.innerHTML = "";
+    s.mds.forEach(function (m) {
+      md.appendChild(el("tr", m.current ? "row-current" : null,
+        "<td>" + dashaMark(m.current) + "</td><td>" + m.lord + "</td><td>" + fd(m.startMs) + "</td><td>" + fd(m.endMs) +
+        "</td><td>" + (m.basis || "") + "</td><td>" + dashaBadge(m.klass, m.label) + "</td>"));
+    });
+    var ad = $("par-ad-table").querySelector("tbody"); ad.innerHTML = "";
+    s.ads.forEach(function (a) {
+      ad.appendChild(el("tr", a.current ? "row-current" : null,
+        "<td>" + dashaMark(a.current) + "</td><td>" + a.mdLord + "</td><td>" + a.lord + "</td><td>" + fd(a.startMs) +
+        "</td><td>" + fd(a.endMs) + "</td><td>" + dashaBadge(a.klass, a.label) + "</td>"));
+    });
+    var pd = $("par-pd-table").querySelector("tbody"); pd.innerHTML = "";
+    s.pds.forEach(function (p) {
+      pd.appendChild(el("tr", p.current ? "row-current" : null,
+        "<td>" + dashaMark(p.current) + "</td><td>" + p.mdLord + "</td><td>" + p.adLord + "</td><td>" + p.lord +
+        "</td><td>" + fd(p.startMs) + "</td><td>" + fd(p.endMs) + "</td><td>" + dashaBadge(p.klass, p.label) + "</td>"));
+    });
+    var sc = $("par-sensitive-out");
+    sc.innerHTML = "<h3>Health-sensitive upcoming periods (Parashara)</h3>";
+    if (!s.sensitive.length) {
+      sc.appendChild(el("p", "hint", "No strongly adverse Antar Dashas found in the next ~30 years on the Parashara measures (dusthana/maraka lordship, debilitation, Khara points)."));
+    } else {
+      sc.appendChild(el("p", null, "Upcoming Antar Dashas that read as <strong>adverse</strong> in Parashara terms &mdash; windows for extra preventive care, not predictions:"));
+      s.sensitive.forEach(function (a) {
+        sc.appendChild(el("div", "qa-window",
+          "<span class='when'>" + fd(a.startMs) + " \u2013 " + fd(a.endMs) + "</span> &mdash; " +
+          a.mdLord + "\u2013" + a.lord + " " + dashaBadge("high", "Adverse") +
+          (a.basis ? " <span class='hint'>" + a.basis + "</span>" : "")));
+      });
+    }
+  }
+
   function renderKPSchedule(s) {
     function badge(klass, label) { return "<span class='sev-tag " + klass + "'>" + label + "</span>"; }
     function mark(cur) { return cur ? "<strong>&#9654;</strong>" : ""; }
@@ -672,6 +710,7 @@
         rl.className = "score-value risk-" + fc.riskClass;
         renderForecastHighlight(fc);
         renderForecast(fc);
+        renderParaSchedule(predict.schedule(natal, qaTimeline, { d22Lord: d22.lord, n64Lord: n64.lord }, Date.now()));
         renderKPDasha(kpdasha.analyze(natal, dz));
         renderKPSchedule(kpdasha.schedule(natal, qaTimeline, Date.now()));
       }

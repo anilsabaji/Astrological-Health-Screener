@@ -20,6 +20,7 @@
   var data = (typeof require !== "undefined") ? require("./data.js") : root.AHS.data;
   var kp = (typeof require !== "undefined") ? require("./kp.js") : root.AHS.kp;
   var parashara = (typeof require !== "undefined") ? require("./parashara.js") : root.AHS.parashara;
+  var dasha = (typeof require !== "undefined") ? require("./dasha.js") : root.AHS.dasha;
 
   function add(map, key, w) { map[key] = (map[key] || 0) + w; }
   function topN(map, n) {
@@ -170,7 +171,85 @@
     };
   }
 
-  var api = { forecast: forecast };
+  // ---- Forward-looking Parashara dasha schedule (upcoming MD/AD/PD) ----
+  function lordHealth(chart, lord, maraka) {
+    var hl = parashara.houseLords(chart.lagnaSignIndex);
+    var owns = hl.lordToHouses[lord] || [];
+    var occ = chart.planets[lord].wholeSignHouse;
+    var dig = parashara.dignityOf(lord, chart.planets[lord].signIndex);
+    var dus = [6, 8, 12], adv = 0, sup = 0, notes = [];
+    if (dus.indexOf(occ) >= 0) { adv += 2; notes.push("placed in " + occ + "th"); }
+    var ownDus = owns.filter(function (h) { return dus.indexOf(h) >= 0; });
+    if (ownDus.length) { adv += ownDus.length; notes.push("lord of " + ownDus.join("/")); }
+    if (lord === maraka.d22Lord) { adv += 2; notes.push("22nd-Drekkana maraka"); }
+    if (lord === maraka.n64Lord) { adv += 2; notes.push("64th-Navamsa maraka"); }
+    var ownMar = owns.filter(function (h) { return h === 2 || h === 7; });
+    if (ownMar.length) { adv += 1; notes.push("maraka-house (" + ownMar.join("/") + ") lord"); }
+    if (dig === "debilitated") { adv += 1; notes.push("debilitated"); }
+    var good = [1, 4, 5, 9, 10];
+    if (good.indexOf(occ) >= 0) sup += 1;
+    if (owns.filter(function (h) { return [1, 5, 9].indexOf(h) >= 0; }).length) sup += 1;
+    if (dig === "exalted" || dig === "own sign") { sup += 1; notes.push(dig); }
+    if (data.NATURE[lord] === "benefic") sup += 0.5;
+
+    var klass, label;
+    if (adv >= 3 && adv > sup) { klass = "high"; label = "Adverse"; }
+    else if (adv >= 1.5 && adv >= sup) { klass = "moderate"; label = "Caution"; }
+    else if (sup > adv) { klass = "low"; label = "Supportive"; }
+    else { klass = "low"; label = "Neutral"; }
+    return { owns: owns, occ: occ, adv: adv, sup: sup, klass: klass, label: label, basis: notes.join("; ") || ("in " + occ + "th") };
+  }
+
+  function jointHealth(chart, lords, maraka) {
+    var a = 0, s = 0, notes = [], seen = {};
+    lords.forEach(function (l) {
+      var h = lordHealth(chart, l, maraka); a += h.adv; s += h.sup;
+      if (h.basis && !seen[l]) { notes.push(l + ": " + h.basis); seen[l] = 1; }
+    });
+    var klass, label;
+    if (a >= 4 && a > s) { klass = "high"; label = "Adverse"; }
+    else if (a >= 2 && a >= s) { klass = "moderate"; label = "Caution"; }
+    else if (s > a) { klass = "low"; label = "Supportive"; }
+    else { klass = "low"; label = "Neutral"; }
+    return { klass: klass, label: label, basis: notes.join(" \u00b7 ") };
+  }
+
+  /*
+   * schedule(chart, timeline, maraka, nowMs)
+   * Parashara health classification of upcoming MD / AD / PD periods.
+   */
+  function schedule(chart, timeline, maraka, nowMs) {
+    if (nowMs === undefined) nowMs = Date.now();
+    var YEAR = 365.25 * 86400000;
+
+    var mds = timeline.mds.filter(function (m) { return m.endMs > nowMs; }).map(function (m) {
+      var h = lordHealth(chart, m.lord, maraka);
+      return { lord: m.lord, startMs: m.startMs, endMs: m.endMs, basis: h.basis, klass: h.klass, label: h.label, current: nowMs >= m.startMs && nowMs < m.endMs };
+    });
+
+    var ads = timeline.ads.filter(function (a) { return a.endMs > nowMs && a.startMs < nowMs + 40 * YEAR; }).map(function (a) {
+      var j = jointHealth(chart, [a.mdLord, a.lord], maraka);
+      return { mdLord: a.mdLord, lord: a.lord, startMs: a.startMs, endMs: a.endMs, basis: j.basis, klass: j.klass, label: j.label, current: nowMs >= a.startMs && nowMs < a.endMs };
+    });
+
+    var sorted = timeline.ads.slice().sort(function (x, y) { return x.startMs - y.startMs; });
+    var idx = 0;
+    for (var i = 0; i < sorted.length; i++) { if (nowMs >= sorted[i].startMs && nowMs < sorted[i].endMs) { idx = i; break; } }
+    var pds = [];
+    [idx, idx + 1].forEach(function (k) {
+      var ad = sorted[k]; if (!ad) return;
+      dasha.subPeriods(ad.lord, ad.startMs, ad.endMs - ad.startMs).forEach(function (pd) {
+        if (pd.endMs < nowMs) return;
+        var j = jointHealth(chart, [ad.mdLord, ad.lord, pd.lord], maraka);
+        pds.push({ mdLord: ad.mdLord, adLord: ad.lord, lord: pd.lord, startMs: pd.startMs, endMs: pd.endMs, klass: j.klass, label: j.label, current: nowMs >= pd.startMs && nowMs < pd.endMs });
+      });
+    });
+
+    var sensitive = ads.filter(function (a) { return a.klass === "high" && a.startMs < nowMs + 30 * YEAR; }).slice(0, 8);
+    return { mds: mds, ads: ads, pds: pds, sensitive: sensitive };
+  }
+
+  var api = { forecast: forecast, schedule: schedule };
   root.AHS = root.AHS || {};
   root.AHS.predict = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
