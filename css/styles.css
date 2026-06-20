@@ -104,6 +104,7 @@ button.ghost { background: transparent; }
 .score-box.parashara { border-color: rgba(124,131,247,.5); }
 .score-box.kp { border-color: rgba(242,196,109,.5); }
 .score-box.risk { border-color: rgba(239,106,106,.5); }
+.score-box.d6 { border-color: rgba(87,201,138,.5); }
 .score-box.risk .score-value { font-size: 1.6rem; padding-top: 8px; }
 .risk-high { color: var(--red); }
 .risk-moderate { color: var(--amber); }

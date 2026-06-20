@@ -25,6 +25,8 @@ sidereal (Vedic) birth chart plus the current planetary transits, and produces a
 - **Vimshottari Dasha** — current Maha / Antar / Pratyantar periods with dates.
 - **Divisionals & maraka points** — D3 Drekkana chart, the **22nd Drekkana lord**
   (from Lagna) and the **64th Navamsa lord** (from Moon).
+- **D6 Shashthamsa health chart** — the divisional dedicated to health & disease,
+  with its own vulnerability analysis (D6 houses 1/6/8/12) and score.
 - **Period Health Forecast** — synthesises dasha lords + maraka points + KP
   significators + dignities to **pinpoint the most vulnerable body part and the
   most probable health issue** for the current period, with a risk rating.
@@ -61,9 +63,10 @@ js/
                       house meanings, dignities, KP house groups)
   parashara.js        Parashara health analysis engine
   kp.js               KP health analysis engine
-  varga.js            divisional charts: D3 Drekkana, D9 navamsa,
+  varga.js            divisional charts: D3 Drekkana, D6 Shashthamsa, D9 navamsa,
                       22nd Drekkana lord, 64th Navamsa lord
   dasha.js            Vimshottari Maha/Antar/Pratyantar dasha + current periods
+  d6.js               D6 Shashthamsa (health/disease) chart analysis
   predict.js          synthesis -> pinpoints weakest body part & probable issue
   app.js              UI wiring (geocoding, rendering, orchestration)
 ```

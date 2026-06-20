@@ -111,6 +111,7 @@ button.ghost { background: transparent; }
 .score-box.parashara { border-color: rgba(124,131,247,.5); }
 .score-box.kp { border-color: rgba(242,196,109,.5); }
 .score-box.risk { border-color: rgba(239,106,106,.5); }
+.score-box.d6 { border-color: rgba(87,201,138,.5); }
 .score-box.risk .score-value { font-size: 1.6rem; padding-top: 8px; }
 .risk-high { color: var(--red); }
 .risk-moderate { color: var(--amber); }
@@ -307,6 +308,10 @@ button.ghost { background: transparent; }
             <span class="score-label">Current-period risk</span>
             <span class="score-value" id="risk-level">--</span>
           </div>
+          <div class="score-box d6">
+            <span class="score-label">D6 health index</span>
+            <span class="score-value" id="d6-score">--</span>
+          </div>
         </div>
         <div id="forecast-highlight" class="forecast-highlight" hidden></div>
       </div>
@@ -317,6 +322,7 @@ button.ghost { background: transparent; }
         <button class="tab" data-tab="parashara">Parashara Analysis</button>
         <button class="tab" data-tab="kp">KP Analysis</button>
         <button class="tab" data-tab="dasha">Dasha &amp; Forecast</button>
+        <button class="tab" data-tab="d6">D6 Health</button>
         <button class="tab" data-tab="divisional">Divisionals (D3)</button>
       </nav>
 
@@ -373,6 +379,22 @@ button.ghost { background: transparent; }
           <p class="hint">Running Maha &middot; Antar &middot; Pratyantar periods as of today (365.25-day year).</p>
         </div>
         <div class="card" id="forecast-out"></div>
+      </div>
+
+      <div class="tab-panel" id="tab-d6">
+        <div class="card">
+          <h3>D6 Shashthamsa &mdash; Health Chart <span class="sub" id="d6-asc"></span></h3>
+          <div class="table-scroll">
+            <table class="data-table" id="d6-table">
+              <thead>
+                <tr><th>Body</th><th>D6 Sign</th><th>D6 House</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="hint">Shashthamsa (D6): each sign split into six 5&deg; parts (odd signs reckoned from Aries, even from Libra). This is the classical divisional chart for <strong>health &amp; disease</strong>; houses 1/6/8/12 here are read for vulnerability.</p>
+        </div>
+        <div class="card" id="d6-out"></div>
       </div>
 
       <div class="tab-panel" id="tab-divisional">
@@ -1584,6 +1606,18 @@ button.ghost { background: transparent; }
   }
 
   /*
+   * D6 Shashthamsa sign. Each sign is divided into six 5-degree parts.
+   * BPHS rule: in ODD signs the parts are reckoned from Aries; in EVEN signs
+   * from Libra. The Shashthamsa (D6) is the classical chart for health & disease.
+   */
+  function shashthamsaSign(signIndex, degInSign) {
+    var part = Math.floor(degInSign / 5);            // 0..5
+    var oddSign = (signIndex % 2 === 0);             // Aries(0),Gemini(2)... are odd signs
+    var start = oddSign ? 0 : 6;                     // Aries or Libra
+    return (start + part) % 12;
+  }
+
+  /*
    * 22nd Drekkana from the Lagna.
    * The Lagna occupies drekkana ordinal o (0,1,2) of its sign. The 22nd drekkana
    * (counting the Lagna's drekkana as the 1st) advances 21 drekkanas = exactly 7
@@ -1629,12 +1663,33 @@ button.ghost { background: transparent; }
     return { lagnaSignIndex: lagnaD3, lagnaSign: core.SIGNS[lagnaD3], planets: planets };
   }
 
+  /*
+   * Build a D6 Shashthamsa chart (the health/disease divisional) from a rasi chart.
+   * Returns D6 sign of each body, D6 lagna, and D6 whole-sign house of each body.
+   */
+  function buildD6(chart) {
+    var lagnaD6 = shashthamsaSign(chart.ascendant.signIndex, chart.ascendant.degInSign);
+    var planets = {};
+    core.BODIES.forEach(function (p) {
+      var d = chart.planets[p];
+      var s = shashthamsaSign(d.signIndex, d.degInSign);
+      planets[p] = {
+        signIndex: s,
+        sign: core.SIGNS[s],
+        house: ((s - lagnaD6 + 12) % 12) + 1
+      };
+    });
+    return { lagnaSignIndex: lagnaD6, lagnaSign: core.SIGNS[lagnaD6], planets: planets };
+  }
+
   var api = {
     drekkanaSign: drekkanaSign,
     navamsaSign: navamsaSign,
+    shashthamsaSign: shashthamsaSign,
     drekkana22: drekkana22,
     navamsa64: navamsa64,
-    buildD3: buildD3
+    buildD3: buildD3,
+    buildD6: buildD6
   };
   root.AHS = root.AHS || {};
   root.AHS.varga = api;
@@ -1751,6 +1806,135 @@ button.ghost { background: transparent; }
 })(typeof window !== "undefined" ? window : globalThis);
 
 
+/* ===== js/d6.js ===== */
+/*
+ * d6.js
+ * Health analysis of the D6 Shashthamsa chart -- the divisional chart classically
+ * dedicated to health, disease, recuperation, enemies and debts.
+ *
+ * Method (whole-sign within the D6 chart):
+ *   - D6 Lagna & its lord  = constitution / vitality in the health chart
+ *   - D6 6th house          = disease (the disease house OF the disease chart)
+ *   - D6 8th / 12th         = chronic ailments, hospitalisation
+ *   - Malefics on D6 1/6/8  = vulnerability; benefics on 1/6 = recuperation
+ *   - Body parts via afflicting planet (karaka) + occupied D6 sign (Kalapurusha)
+ *
+ * Works in browser (window.AHS.d6) and Node.
+ */
+(function (root) {
+  "use strict";
+
+  var core = (typeof require !== "undefined") ? require("./astro-core.js") : root.AHS.core;
+  var data = (typeof require !== "undefined") ? require("./data.js") : root.AHS.data;
+  var parashara = (typeof require !== "undefined") ? require("./parashara.js") : root.AHS.parashara;
+
+  var GRAHAS = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"];
+  function isMalefic(p) { return data.NATURE[p] === "malefic"; }
+  function uniq(a) { return a.filter(function (v, i) { return a.indexOf(v) === i; }); }
+  function bodyParts(planet, signIndex) {
+    return uniq((data.PLANET_BODY[planet] || []).slice(0, 3)
+      .concat((data.SIGN_BODY[signIndex] || []).slice(0, 2)));
+  }
+
+  // house -> planets and planet -> house from a D6 chart
+  function maps(d6) {
+    var hp = {}, ph = {};
+    for (var i = 1; i <= 12; i++) hp[i] = [];
+    GRAHAS.forEach(function (p) {
+      var h = d6.planets[p].house;
+      ph[p] = h; hp[h].push(p);
+    });
+    return { housePlanets: hp, planetHouse: ph };
+  }
+
+  /*
+   * analyze(d6, originalChart)
+   * d6 = varga.buildD6(chart); originalChart kept for lagna-lord dignity lookups.
+   */
+  function analyze(d6) {
+    var lagna = d6.lagnaSignIndex;
+    var hl = parashara.houseLords(lagna); // house->lord from D6 lagna
+    var m = maps(d6);
+    var findings = [];
+    var supportive = [];
+    var score = 70;
+    var dusthana = [6, 8, 12];
+
+    // ---- D6 Lagna lord ----
+    var lord = hl.houseToLord[1];
+    var lordHouse = m.planetHouse[lord];
+    var lordSign = d6.planets[lord].signIndex;
+    var dig = parashara.dignityOf(lord, lordSign);
+    var note = "D6 Lagna lord " + lord + " is in D6 house " + lordHouse + " (" + core.SIGNS[lordSign] + "), " + dig + ".";
+    if (dusthana.indexOf(lordHouse) >= 0) {
+      score -= 10;
+      findings.push({
+        area: "Constitution in the health chart (D6 Lagna lord)",
+        severity: "moderate",
+        basis: note + " Its placement in a D6 dusthana weakens baseline disease-resistance.",
+        bodyParts: bodyParts(lord, lordSign)
+      });
+    } else {
+      supportive.push(note + (dig === "exalted" || dig === "own sign" ? " A dignified D6 lagna lord aids recovery." : ""));
+    }
+    if (dig === "debilitated") score -= 6;
+    else if (dig === "exalted" || dig === "own sign") score += 5;
+
+    // ---- Malefics / benefics on D6 1, 6, 8, 12 ----
+    var watch = [
+      { h: 1, label: "D6 Ascendant (body/vitality)" },
+      { h: 6, label: "D6 6th house (active disease)" },
+      { h: 8, label: "D6 8th house (chronic/acute crises)" },
+      { h: 12, label: "D6 12th house (hospitalisation/loss)" }
+    ];
+    watch.forEach(function (w) {
+      var occ = m.housePlanets[w.h];
+      if (!occ.length) return;
+      var mal = occ.filter(isMalefic);
+      var ben = occ.filter(function (p) { return !isMalefic(p); });
+      var parts = [];
+      occ.forEach(function (p) { parts = parts.concat(bodyParts(p, d6.planets[p].signIndex)); });
+      if (mal.length && (w.h === 1 || w.h === 6 || w.h === 8 || w.h === 12)) {
+        score -= (w.h === 6 || w.h === 8 ? 6 : 4) * mal.length;
+        findings.push({
+          area: w.label,
+          severity: mal.length >= 2 ? "high" : "moderate",
+          basis: "Malefic(s) " + mal.join(", ") + " in " + w.label +
+            " emphasise the organs/functions they govern as vulnerable in this health chart.",
+          bodyParts: uniq(parts)
+        });
+      }
+      if (ben.length && (w.h === 1 || w.h === 6)) {
+        score += 3;
+        supportive.push("Benefic(s) " + ben.join(", ") + " in " + w.label + " support resilience/recuperation.");
+      }
+    });
+
+    score = Math.max(5, Math.min(95, Math.round(score)));
+    var band = score >= 75 ? "strong" : score >= 60 ? "reasonably stable" :
+      score >= 45 ? "guarded" : "fragile";
+    var summary = "D6 (Shashthamsa) health-chart reading: disease-resistance appears " + band +
+      " (D6 index " + score + "/100). D6 Ascendant is " + core.SIGNS[lagna] +
+      "; the findings reflect afflictions to the health-specific houses (1/6/8/12).";
+
+    return {
+      method: "D6 Shashthamsa",
+      score: score,
+      summary: summary,
+      lagnaSign: core.SIGNS[lagna],
+      findings: findings,
+      supportive: supportive,
+      maps: m
+    };
+  }
+
+  var api = { analyze: analyze };
+  root.AHS = root.AHS || {};
+  root.AHS.d6 = api;
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+})(typeof window !== "undefined" ? window : globalThis);
+
+
 /* ===== js/predict.js ===== */
 /*
  * predict.js
@@ -1785,8 +1969,9 @@ button.ghost { background: transparent; }
    * chart   : core.buildChart output
    * dasha   : dasha.compute output (md/ad/pd)
    * maraka  : { d22Lord, n64Lord }
+   * extra   : optional { d6 } -- varga.buildD6 output, to fold in D6 disease houses
    */
-  function forecast(chart, dasha, maraka) {
+  function forecast(chart, dasha, maraka, extra) {
     var dusthana = [6, 8, 12];
 
     // Contributing planets with base weights by role.
@@ -1797,6 +1982,15 @@ button.ghost { background: transparent; }
       { planet: maraka.n64Lord, role: "64th Navamsa lord (maraka)", weight: 2.0 },
       { planet: maraka.d22Lord, role: "22nd Drekkana lord (maraka)", weight: 2.0 }
     ];
+
+    // Fold in D6 (health-chart) disease-house occupants, if provided.
+    if (extra && extra.d6) {
+      ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"].forEach(function (p) {
+        var h = extra.d6.planets[p].house;
+        if (h === 6) roles.push({ planet: p, role: "in D6 6th (disease)", weight: 1.3 });
+        else if (h === 8) roles.push({ planet: p, role: "in D6 8th (crisis)", weight: 1.1 });
+      });
+    }
 
     // Merge duplicate planets, summing weights and collecting roles.
     var byPlanet = {};
@@ -1936,6 +2130,7 @@ button.ghost { background: transparent; }
   var varga = window.AHS.varga;
   var dasha = window.AHS.dasha;
   var predict = window.AHS.predict;
+  var d6engine = window.AHS.d6;
 
   var $ = function (id) { return document.getElementById(id); };
   function el(tag, cls, html) {
@@ -2228,6 +2423,38 @@ button.ghost { background: transparent; }
       "<div class='focus-parts'><strong>Most probable issue(s):</strong><br>" + issues + "</div>";
   }
 
+  function renderD6(d6chart, d6Res, f) {
+    var tbody = $("d6-table").querySelector("tbody");
+    tbody.innerHTML = "";
+    core.BODIES.forEach(function (p) {
+      var d = d6chart.planets[p];
+      tbody.appendChild(el("tr", null,
+        "<td>" + p + "</td><td>" + d.sign + "</td><td>" +
+        (f.unknownTime ? "&mdash;" : d.house) + "</td>"));
+    });
+    $("d6-asc").textContent = "D6 Lagna: " + d6chart.lagnaSign + (f.unknownTime ? " (approx \u2014 time unknown)" : "");
+
+    var c = $("d6-out");
+    c.innerHTML = "<h3>D6 Shashthamsa Health Analysis</h3>";
+    if (f.unknownTime) {
+      c.appendChild(el("p", "hint", "House-based D6 analysis needs a birth time. The D6 sign placements above are still valid."));
+      return;
+    }
+    c.appendChild(el("div", "summary-box", d6Res.summary));
+    if (d6Res.findings.length) {
+      c.appendChild(el("h4", null, "Vulnerabilities in the health chart"));
+      d6Res.findings.forEach(function (ff) { c.appendChild(renderFinding(ff)); });
+    }
+    if (d6Res.supportive.length) {
+      var sup = el("div", "finding supportive");
+      sup.appendChild(el("h4", null, "Supportive factors"));
+      var ul = el("ul");
+      d6Res.supportive.forEach(function (s) { ul.appendChild(el("li", null, s)); });
+      sup.appendChild(ul);
+      c.appendChild(sup);
+    }
+  }
+
   function renderForecast(fc) {
     var c = $("forecast-out");
     c.innerHTML = "<h3>Period Health Forecast</h3>";
@@ -2274,6 +2501,8 @@ button.ghost { background: transparent; }
       var dz = dasha.compute(natal.jd, natal.planets.Moon.lon);
       var n64 = varga.navamsa64(natal.planets.Moon.lon);
       var d22 = varga.drekkana22(natal.ascendant.signIndex, natal.ascendant.degInSign);
+      var d6chart = varga.buildD6(natal);
+      var d6Res = d6engine.analyze(d6chart);
       var fc = null;
 
       $("overview-meta").textContent =
@@ -2288,17 +2517,20 @@ button.ghost { background: transparent; }
       renderTransits(transit, natal, f);
       renderDasha(dz);
       renderDivisional(natal, d22, n64, f);
+      renderD6(d6chart, d6Res, f);
 
       if (f.unknownTime) {
         $("parashara-out").innerHTML = "<h3>Parashara Health Analysis</h3><p class='hint'>House-based analysis needs a birth time. Enter the time of birth to enable the full Parashara &amp; KP screening. Planetary sign/nakshatra placements above are still valid.</p>";
         $("kp-out").innerHTML = "<h3>KP Health Analysis</h3><p class='hint'>KP relies on house cusps, which require an accurate birth time.</p>";
         $("risk-level").textContent = "n/a*";
+        $("d6-score").textContent = "n/a*";
         $("forecast-highlight").hidden = true;
         $("forecast-out").innerHTML = "<h3>Period Health Forecast</h3><p class='hint'>The pinpointed forecast needs a birth time (it uses houses and the 22nd-Drekkana point). The Dasha timeline and 64th-Navamsa point above are still shown.</p>";
       } else {
         renderParashara(parRes);
         renderKP(kpRes);
-        fc = predict.forecast(natal, dz, { d22Lord: d22.lord, n64Lord: n64.lord });
+        $("d6-score").textContent = d6Res.score;
+        fc = predict.forecast(natal, dz, { d22Lord: d22.lord, n64Lord: n64.lord }, { d6: d6chart });
         var rl = $("risk-level");
         rl.textContent = fc.riskLevel;
         rl.className = "score-value risk-" + fc.riskClass;

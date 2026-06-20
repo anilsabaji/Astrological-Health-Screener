@@ -12,6 +12,7 @@
   var varga = window.AHS.varga;
   var dasha = window.AHS.dasha;
   var predict = window.AHS.predict;
+  var d6engine = window.AHS.d6;
 
   var $ = function (id) { return document.getElementById(id); };
   function el(tag, cls, html) {
@@ -304,6 +305,38 @@
       "<div class='focus-parts'><strong>Most probable issue(s):</strong><br>" + issues + "</div>";
   }
 
+  function renderD6(d6chart, d6Res, f) {
+    var tbody = $("d6-table").querySelector("tbody");
+    tbody.innerHTML = "";
+    core.BODIES.forEach(function (p) {
+      var d = d6chart.planets[p];
+      tbody.appendChild(el("tr", null,
+        "<td>" + p + "</td><td>" + d.sign + "</td><td>" +
+        (f.unknownTime ? "&mdash;" : d.house) + "</td>"));
+    });
+    $("d6-asc").textContent = "D6 Lagna: " + d6chart.lagnaSign + (f.unknownTime ? " (approx \u2014 time unknown)" : "");
+
+    var c = $("d6-out");
+    c.innerHTML = "<h3>D6 Shashthamsa Health Analysis</h3>";
+    if (f.unknownTime) {
+      c.appendChild(el("p", "hint", "House-based D6 analysis needs a birth time. The D6 sign placements above are still valid."));
+      return;
+    }
+    c.appendChild(el("div", "summary-box", d6Res.summary));
+    if (d6Res.findings.length) {
+      c.appendChild(el("h4", null, "Vulnerabilities in the health chart"));
+      d6Res.findings.forEach(function (ff) { c.appendChild(renderFinding(ff)); });
+    }
+    if (d6Res.supportive.length) {
+      var sup = el("div", "finding supportive");
+      sup.appendChild(el("h4", null, "Supportive factors"));
+      var ul = el("ul");
+      d6Res.supportive.forEach(function (s) { ul.appendChild(el("li", null, s)); });
+      sup.appendChild(ul);
+      c.appendChild(sup);
+    }
+  }
+
   function renderForecast(fc) {
     var c = $("forecast-out");
     c.innerHTML = "<h3>Period Health Forecast</h3>";
@@ -350,6 +383,8 @@
       var dz = dasha.compute(natal.jd, natal.planets.Moon.lon);
       var n64 = varga.navamsa64(natal.planets.Moon.lon);
       var d22 = varga.drekkana22(natal.ascendant.signIndex, natal.ascendant.degInSign);
+      var d6chart = varga.buildD6(natal);
+      var d6Res = d6engine.analyze(d6chart);
       var fc = null;
 
       $("overview-meta").textContent =
@@ -364,17 +399,20 @@
       renderTransits(transit, natal, f);
       renderDasha(dz);
       renderDivisional(natal, d22, n64, f);
+      renderD6(d6chart, d6Res, f);
 
       if (f.unknownTime) {
         $("parashara-out").innerHTML = "<h3>Parashara Health Analysis</h3><p class='hint'>House-based analysis needs a birth time. Enter the time of birth to enable the full Parashara &amp; KP screening. Planetary sign/nakshatra placements above are still valid.</p>";
         $("kp-out").innerHTML = "<h3>KP Health Analysis</h3><p class='hint'>KP relies on house cusps, which require an accurate birth time.</p>";
         $("risk-level").textContent = "n/a*";
+        $("d6-score").textContent = "n/a*";
         $("forecast-highlight").hidden = true;
         $("forecast-out").innerHTML = "<h3>Period Health Forecast</h3><p class='hint'>The pinpointed forecast needs a birth time (it uses houses and the 22nd-Drekkana point). The Dasha timeline and 64th-Navamsa point above are still shown.</p>";
       } else {
         renderParashara(parRes);
         renderKP(kpRes);
-        fc = predict.forecast(natal, dz, { d22Lord: d22.lord, n64Lord: n64.lord });
+        $("d6-score").textContent = d6Res.score;
+        fc = predict.forecast(natal, dz, { d22Lord: d22.lord, n64Lord: n64.lord }, { d6: d6chart });
         var rl = $("risk-level");
         rl.textContent = fc.riskLevel;
         rl.className = "score-value risk-" + fc.riskClass;

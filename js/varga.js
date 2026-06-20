@@ -35,6 +35,18 @@
   }
 
   /*
+   * D6 Shashthamsa sign. Each sign is divided into six 5-degree parts.
+   * BPHS rule: in ODD signs the parts are reckoned from Aries; in EVEN signs
+   * from Libra. The Shashthamsa (D6) is the classical chart for health & disease.
+   */
+  function shashthamsaSign(signIndex, degInSign) {
+    var part = Math.floor(degInSign / 5);            // 0..5
+    var oddSign = (signIndex % 2 === 0);             // Aries(0),Gemini(2)... are odd signs
+    var start = oddSign ? 0 : 6;                     // Aries or Libra
+    return (start + part) % 12;
+  }
+
+  /*
    * 22nd Drekkana from the Lagna.
    * The Lagna occupies drekkana ordinal o (0,1,2) of its sign. The 22nd drekkana
    * (counting the Lagna's drekkana as the 1st) advances 21 drekkanas = exactly 7
@@ -80,12 +92,33 @@
     return { lagnaSignIndex: lagnaD3, lagnaSign: core.SIGNS[lagnaD3], planets: planets };
   }
 
+  /*
+   * Build a D6 Shashthamsa chart (the health/disease divisional) from a rasi chart.
+   * Returns D6 sign of each body, D6 lagna, and D6 whole-sign house of each body.
+   */
+  function buildD6(chart) {
+    var lagnaD6 = shashthamsaSign(chart.ascendant.signIndex, chart.ascendant.degInSign);
+    var planets = {};
+    core.BODIES.forEach(function (p) {
+      var d = chart.planets[p];
+      var s = shashthamsaSign(d.signIndex, d.degInSign);
+      planets[p] = {
+        signIndex: s,
+        sign: core.SIGNS[s],
+        house: ((s - lagnaD6 + 12) % 12) + 1
+      };
+    });
+    return { lagnaSignIndex: lagnaD6, lagnaSign: core.SIGNS[lagnaD6], planets: planets };
+  }
+
   var api = {
     drekkanaSign: drekkanaSign,
     navamsaSign: navamsaSign,
+    shashthamsaSign: shashthamsaSign,
     drekkana22: drekkana22,
     navamsa64: navamsa64,
-    buildD3: buildD3
+    buildD3: buildD3,
+    buildD6: buildD6
   };
   root.AHS = root.AHS || {};
   root.AHS.varga = api;

@@ -31,8 +31,9 @@
    * chart   : core.buildChart output
    * dasha   : dasha.compute output (md/ad/pd)
    * maraka  : { d22Lord, n64Lord }
+   * extra   : optional { d6 } -- varga.buildD6 output, to fold in D6 disease houses
    */
-  function forecast(chart, dasha, maraka) {
+  function forecast(chart, dasha, maraka, extra) {
     var dusthana = [6, 8, 12];
 
     // Contributing planets with base weights by role.
@@ -43,6 +44,15 @@
       { planet: maraka.n64Lord, role: "64th Navamsa lord (maraka)", weight: 2.0 },
       { planet: maraka.d22Lord, role: "22nd Drekkana lord (maraka)", weight: 2.0 }
     ];
+
+    // Fold in D6 (health-chart) disease-house occupants, if provided.
+    if (extra && extra.d6) {
+      ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"].forEach(function (p) {
+        var h = extra.d6.planets[p].house;
+        if (h === 6) roles.push({ planet: p, role: "in D6 6th (disease)", weight: 1.3 });
+        else if (h === 8) roles.push({ planet: p, role: "in D6 8th (crisis)", weight: 1.1 });
+      });
+    }
 
     // Merge duplicate planets, summing weights and collecting roles.
     var byPlanet = {};
