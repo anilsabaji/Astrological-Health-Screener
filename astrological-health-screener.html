@@ -195,6 +195,26 @@ button.ghost { background: transparent; }
 .disclaimer-foot ul { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: .88rem; }
 .disclaimer-foot li { margin: 6px 0; }
 
+/* Ask-a-question */
+.qa-examples { margin: 12px 0; }
+.qa-examples .qa-chip {
+  display: inline-block; cursor: pointer; background: var(--bg-2); border: 1px solid var(--line);
+  border-radius: 999px; padding: 6px 12px; font-size: .82rem; margin: 4px 6px 0 0; color: var(--muted);
+}
+.qa-examples .qa-chip:hover { border-color: var(--indigo); color: var(--text); }
+.qa-answer { margin-top: 16px; border-radius: 12px; padding: 16px 18px; border: 1px solid var(--line); background: var(--card-2); }
+.qa-answer.high { border-left: 5px solid var(--red); }
+.qa-answer.moderate { border-left: 5px solid var(--amber); }
+.qa-answer.low { border-left: 5px solid var(--green); }
+.qa-answer h4 { margin: 0 0 8px; }
+.qa-likelihood { font-size: .72rem; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: .5px; margin-left: 8px; }
+.qa-likelihood.high { background: rgba(239,106,106,.2); color: var(--red); }
+.qa-likelihood.moderate { background: rgba(232,184,75,.2); color: var(--amber); }
+.qa-likelihood.low { background: rgba(87,201,138,.2); color: var(--green); }
+.qa-window { background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; margin: 6px 0; font-size: .9rem; }
+.qa-window .when { color: var(--gold); font-weight: 600; }
+.qa-disclaimer { color: var(--amber); margin-top: 16px; }
+
 .site-footer { border-top: 1px solid var(--line); padding: 20px 0; color: var(--muted); font-size: .82rem; text-align: center; }
 .site-footer .credit { font-size: 1rem; color: var(--gold); margin: 0 0 6px; letter-spacing: .3px; }
 .site-footer .credit strong { color: var(--gold); }
@@ -319,7 +339,8 @@ button.ghost { background: transparent; }
       </div>
 
       <nav class="tabs" id="tabs">
-        <button class="tab active" data-tab="chart">Birth Chart</button>
+        <button class="tab active" data-tab="ask">&#128172; Ask a Question</button>
+        <button class="tab" data-tab="chart">Birth Chart</button>
         <button class="tab" data-tab="transits">Current Transits</button>
         <button class="tab" data-tab="parashara">Parashara Analysis</button>
         <button class="tab" data-tab="kp">KP Analysis</button>
@@ -328,7 +349,25 @@ button.ghost { background: transparent; }
         <button class="tab" data-tab="divisional">Divisionals (D3)</button>
       </nav>
 
-      <div class="tab-panel active" id="tab-chart">
+      <div class="tab-panel active" id="tab-ask">
+        <div class="card">
+          <h3>Ask a specific health question</h3>
+          <p class="hint">Type a question in plain English. The module identifies the health theme, runs the relevant
+            astrological calculations (significators, D6, dasha timing, maraka points) and answers with a likelihood,
+            the most implicated organ/area, and the most sensitive time window.</p>
+          <div class="city-search">
+            <input type="text" id="qa-input" placeholder="e.g. Will I get a heart attack? / Will I get cancer? / Any risk to my kidneys?" />
+            <button type="button" id="qa-btn" class="primary">Ask</button>
+          </div>
+          <div class="qa-examples" id="qa-examples"></div>
+          <div id="qa-out"></div>
+          <p class="hint qa-disclaimer">&#9888; Answers are astrological <em>indications and risk-sensitive periods</em>, not a
+            medical diagnosis or a prediction of certainty. For any genuine health concern &mdash; especially serious ones &mdash;
+            please consult a qualified medical professional and get appropriate screening.</p>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-chart">
         <div class="card">
           <h3>Natal Chart <span class="sub" id="chart-asc"></span></h3>
           <div class="table-scroll">
@@ -1801,7 +1840,35 @@ button.ghost { background: transparent; }
     return d.getUTCDate() + " " + mo[d.getUTCMonth()] + " " + d.getUTCFullYear();
   }
 
-  var api = { compute: compute, subPeriods: subPeriods, fmtDate: fmtDate };
+  /*
+   * Full lifetime timeline of Maha + Antar dasha periods (one 120-year cycle
+   * from the virtual MD start). Used for event-timing scans.
+   * Returns { mds:[{lord,startMs,endMs}], ads:[{mdLord,lord,startMs,endMs}] }.
+   */
+  function timeline(jdBirth, moonLon) {
+    var span = 360 / 27;
+    var nakIdx = Math.floor(rev(moonLon) / span);
+    var startLord = NAKSHATRAS[nakIdx][1];
+    var posInNak = rev(moonLon) - nakIdx * span;
+    var frac = posInNak / span;
+    var startIdx = VIM_ORDER.indexOf(startLord);
+    var birthMs = jdToMs(jdBirth);
+    var t = birthMs - frac * VIM_YEARS[startLord] * YEAR_DAYS * DAY_MS;
+
+    var mds = [], ads = [];
+    for (var i = 0; i < 9; i++) {
+      var ml = VIM_ORDER[(startIdx + i) % 9];
+      var len = VIM_YEARS[ml] * YEAR_DAYS * DAY_MS;
+      mds.push({ lord: ml, startMs: t, endMs: t + len });
+      subPeriods(ml, t, len).forEach(function (a) {
+        ads.push({ mdLord: ml, lord: a.lord, startMs: a.startMs, endMs: a.endMs });
+      });
+      t += len;
+    }
+    return { mds: mds, ads: ads };
+  }
+
+  var api = { compute: compute, subPeriods: subPeriods, fmtDate: fmtDate, timeline: timeline };
   root.AHS = root.AHS || {};
   root.AHS.dasha = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
@@ -1933,6 +2000,408 @@ button.ghost { background: transparent; }
   var api = { analyze: analyze };
   root.AHS = root.AHS || {};
   root.AHS.d6 = api;
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+})(typeof window !== "undefined" ? window : globalThis);
+
+
+/* ===== js/health-topics.js ===== */
+/*
+ * health-topics.js
+ * Knowledge base that maps a free-text health question to the relevant
+ * astrological factors (houses, planetary karakas, body parts), plus a simple
+ * keyword classifier.
+ *
+ * Sign indices: Aries 0 ... Pisces 11.
+ * Works in browser (window.AHS.topics) and Node.
+ */
+(function (root) {
+  "use strict";
+
+  // severity: acute = sudden/event-like; chronic = long-developing.
+  var TOPICS = [
+    {
+      id: "heart", label: "heart / cardiac issue (e.g. heart attack)",
+      keywords: ["heart attack", "heart", "cardiac", "coronary", "myocard", "chest pain", "angina", "palpitation"],
+      houses: [4, 5], karakas: ["Sun"], support: ["Moon"],
+      malefics: ["Saturn", "Mars", "Rahu"], bodyParts: ["heart", "chest"],
+      signs: [3, 4], severity: "acute"
+    },
+    {
+      id: "cancer", label: "cancer / malignancy",
+      keywords: ["cancer", "tumor", "tumour", "malignan", "carcinoma", "oncolog", "growth", "lump"],
+      houses: [6, 8], karakas: ["Saturn", "Rahu", "Ketu"], support: ["Moon", "Mars"],
+      malefics: ["Saturn", "Rahu", "Ketu"], bodyParts: [],
+      signs: [], severity: "chronic", organSearch: true
+    },
+    {
+      id: "diabetes", label: "diabetes / blood sugar",
+      keywords: ["diabet", "blood sugar", "insulin", "sugar level", "glucose"],
+      houses: [6], karakas: ["Venus", "Jupiter"], support: [],
+      malefics: ["Saturn", "Rahu"], bodyParts: ["pancreas", "liver"], signs: [11], severity: "chronic"
+    },
+    {
+      id: "kidney", label: "kidney / urinary system",
+      keywords: ["kidney", "renal", "urinary", "urine", "bladder", "nephro"],
+      houses: [7], karakas: ["Venus"], support: [], malefics: ["Saturn", "Mars"],
+      bodyParts: ["kidneys & urinary tract", "bladder"], signs: [6], severity: "chronic"
+    },
+    {
+      id: "liver", label: "liver disorder",
+      keywords: ["liver", "hepat", "jaundice", "cirrhosis"],
+      houses: [5, 9], karakas: ["Jupiter"], support: [], malefics: ["Saturn", "Mars", "Rahu"],
+      bodyParts: ["liver"], signs: [8], severity: "chronic"
+    },
+    {
+      id: "mental", label: "mental / emotional health (anxiety, depression)",
+      keywords: ["depress", "anxiety", "mental", "stress", "panic", "psych", "mind", "insomnia", "sleep"],
+      houses: [1, 5], karakas: ["Moon", "Mercury"], support: ["Jupiter"],
+      malefics: ["Saturn", "Rahu", "Ketu"], bodyParts: ["mind & emotions", "nervous system"], signs: [], severity: "chronic"
+    },
+    {
+      id: "accident", label: "accident / injury / surgery",
+      keywords: ["accident", "injury", "injur", "fracture", "surgery", "operation", "wound", "cut", "fall"],
+      houses: [6, 8], karakas: ["Mars", "Ketu"], support: [], malefics: ["Mars", "Saturn", "Rahu", "Ketu"],
+      bodyParts: ["blood", "muscles", "bones & joints"], signs: [0], severity: "acute"
+    },
+    {
+      id: "bp", label: "blood pressure / hypertension",
+      keywords: ["blood pressure", "hypertension", "bp", "hypotension"],
+      houses: [4], karakas: ["Sun", "Mars"], support: ["Moon"], malefics: ["Saturn", "Rahu"],
+      bodyParts: ["heart", "blood", "arterial system"], signs: [], severity: "chronic"
+    },
+    {
+      id: "respiratory", label: "respiratory / lungs (asthma, breathing)",
+      keywords: ["asthma", "lung", "respirat", "breath", "bronch", "cough", "pneumon", "tuberc"],
+      houses: [3, 4], karakas: ["Mercury", "Moon"], support: [], malefics: ["Saturn", "Ketu"],
+      bodyParts: ["lungs", "respiratory tract"], signs: [2], severity: "chronic"
+    },
+    {
+      id: "joints", label: "bones / joints / arthritis",
+      keywords: ["arthrit", "joint", "bone", "knee", "spine", "back pain", "osteo", "rheumat"],
+      houses: [1], karakas: ["Saturn"], support: [], malefics: ["Saturn", "Rahu"],
+      bodyParts: ["bones & joints", "knees"], signs: [9], severity: "chronic"
+    },
+    {
+      id: "skin", label: "skin condition",
+      keywords: ["skin", "derma", "eczema", "psoriasis", "rash", "allerg"],
+      houses: [6], karakas: ["Mercury", "Saturn"], support: [], malefics: ["Saturn", "Rahu", "Mars"],
+      bodyParts: ["skin"], signs: [], severity: "chronic"
+    },
+    {
+      id: "digestive", label: "digestive / stomach",
+      keywords: ["stomach", "digest", "ulcer", "acidity", "gastr", "intestin", "bowel", "ibs", "constipat"],
+      houses: [5, 6], karakas: ["Moon", "Mercury"], support: ["Jupiter"], malefics: ["Mars", "Saturn"],
+      bodyParts: ["stomach", "intestines", "digestive system"], signs: [5], severity: "chronic"
+    },
+    {
+      id: "eye", label: "eyes / vision",
+      keywords: ["eye", "vision", "sight", "blind", "cataract", "retina"],
+      houses: [2, 12], karakas: ["Sun", "Venus"], support: ["Moon"], malefics: ["Saturn", "Mars"],
+      bodyParts: ["eyes"], signs: [], severity: "chronic"
+    },
+    {
+      id: "reproductive", label: "reproductive / fertility",
+      keywords: ["reproduc", "fertil", "pregnan", "uterus", "ovary", "prostate", "sperm", "menstr", "sexual"],
+      houses: [7, 8], karakas: ["Venus", "Mars"], support: ["Jupiter", "Moon"], malefics: ["Saturn", "Rahu", "Ketu"],
+      bodyParts: ["reproductive organs"], signs: [7], severity: "chronic"
+    },
+    {
+      id: "thyroid", label: "thyroid / hormonal / throat",
+      keywords: ["thyroid", "hormon", "throat", "goiter", "endocrine"],
+      houses: [2], karakas: ["Mercury", "Venus", "Jupiter"], support: [], malefics: ["Saturn", "Rahu"],
+      bodyParts: ["throat", "hormonal/endocrine balance"], signs: [1], severity: "chronic"
+    },
+    {
+      id: "neuro", label: "neurological / nervous system",
+      keywords: ["nerv", "neuro", "parkinson", "epilep", "seizure", "stroke", "paralys", "migraine"],
+      houses: [3], karakas: ["Mercury", "Saturn"], support: [], malefics: ["Saturn", "Rahu", "Ketu"],
+      bodyParts: ["nervous system"], signs: [], severity: "chronic"
+    },
+    {
+      id: "infection", label: "infection / fever",
+      keywords: ["infect", "fever", "viral", "virus", "bacteri", "flu", "sepsis"],
+      houses: [6], karakas: ["Mars", "Ketu"], support: [], malefics: ["Mars", "Rahu", "Ketu"],
+      bodyParts: ["blood"], signs: [], severity: "acute"
+    }
+  ];
+
+  var GENERIC = {
+    id: "general", label: "general health",
+    keywords: [], houses: [1, 6, 8], karakas: ["Sun", "Moon", "Saturn"], support: [],
+    malefics: ["Saturn", "Mars", "Rahu", "Ketu"], bodyParts: [], signs: [], severity: "both", organSearch: true
+  };
+
+  // Classify a free-text question -> best matching topic (or generic).
+  function classify(text) {
+    var q = (text || "").toLowerCase();
+    var best = null, bestHits = 0;
+    TOPICS.forEach(function (t) {
+      var hits = 0;
+      t.keywords.forEach(function (k) { if (q.indexOf(k) >= 0) hits++; });
+      if (hits > bestHits) { bestHits = hits; best = t; }
+    });
+    return { topic: best || GENERIC, matched: !!best, hits: bestHits };
+  }
+
+  var api = { TOPICS: TOPICS, GENERIC: GENERIC, classify: classify };
+  root.AHS = root.AHS || {};
+  root.AHS.topics = api;
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+})(typeof window !== "undefined" ? window : globalThis);
+
+
+/* ===== js/qa.js ===== */
+/*
+ * qa.js
+ * Natural-language health question engine.
+ * Classifies a question into a health topic, scores the astrological
+ * predisposition, pinpoints the most likely organ/area, and times the most
+ * sensitive period using Vimshottari dasha (+ a transit check).
+ *
+ * IMPORTANT: output is framed as astrological INDICATION and risk-sensitive
+ * timing, never as a medical diagnosis or a deterministic event.
+ *
+ * Works in browser (window.AHS.qa) and Node.
+ */
+(function (root) {
+  "use strict";
+
+  var R = (typeof require !== "undefined");
+  var core = R ? require("./astro-core.js") : root.AHS.core;
+  var data = R ? require("./data.js") : root.AHS.data;
+  var kp = R ? require("./kp.js") : root.AHS.kp;
+  var parashara = R ? require("./parashara.js") : root.AHS.parashara;
+  var dasha = R ? require("./dasha.js") : root.AHS.dasha;
+  var topics = R ? require("./health-topics.js") : root.AHS.topics;
+
+  var DIS = [6, 8, 12];
+  function uniq(a) { return a.filter(function (v, i) { return a.indexOf(v) === i; }); }
+  function isMalefic(p) { return data.NATURE[p] === "malefic"; }
+  function inter(a, b) { return a.filter(function (x) { return b.indexOf(x) >= 0; }); }
+  function ordinal(n) {
+    var s = ["th", "st", "nd", "rd"], v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  }
+  // weighted contribution of signifying disease houses (6 dominates; 12 light)
+  function diseaseHouseWeight(housesSignified) {
+    var w = 0;
+    if (housesSignified.indexOf(6) >= 0) w += 1.5;
+    if (housesSignified.indexOf(8) >= 0) w += 0.8;
+    if (housesSignified.indexOf(12) >= 0) w += 0.4;
+    return Math.min(w, 2.0);
+  }
+
+  // --- how afflicted is a single planet? returns {score, reasons[]} ---
+  function planetAffliction(ctx, p) {
+    var chart = ctx.chart, d6 = ctx.d6, score = 0, reasons = [];
+    var pl = chart.planets[p];
+    if (!pl) return { score: 0, reasons: [] };
+    var s = pl.signIndex;
+
+    var dig = parashara.dignityOf(p, s);
+    if (dig === "debilitated") { score += 1.5; reasons.push(p + " is debilitated in " + core.SIGNS[s]); }
+    else if (dig === "exalted" || dig === "own sign") { score -= 0.8; }
+
+    if (DIS.indexOf(pl.wholeSignHouse) >= 0) { score += 1.2; reasons.push(p + " sits in dusthana house " + pl.wholeSignHouse); }
+
+    var sig = kp.planetSignifications(chart, p);
+    var d = inter(sig.all, DIS);
+    if (d.length) {
+      var w = diseaseHouseWeight(d);
+      score += w;
+      if (w >= 1.0) reasons.push(p + " (KP) signifies disease house(s) " + d.join(", "));
+    }
+
+    // malefic conjunction / aspect (whole-sign)
+    var conj = 0;
+    ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"].forEach(function (q) {
+      if (q === p || !isMalefic(q)) return;
+      var qh = chart.planets[q].wholeSignHouse;
+      if (qh === pl.wholeSignHouse && conj < 1.0) { score += 0.5; conj += 0.5; reasons.push(p + " is conjunct malefic " + q); }
+      else if (parashara.aspectsFrom(q, qh).indexOf(pl.wholeSignHouse) >= 0) { score += 0.3; }
+    });
+
+    if (d6) {
+      var h6 = d6.planets[p].house;
+      if (h6 === 6) { score += 1.2; reasons.push(p + " falls in D6 6th (disease) house"); }
+      else if (h6 === 8) { score += 0.8; reasons.push(p + " falls in D6 8th house"); }
+    }
+    if (p === ctx.n64Lord) { score += 1.2; reasons.push(p + " is the 64th-Navamsa (maraka) lord"); }
+    if (p === ctx.d22Lord) { score += 1.0; reasons.push(p + " is the 22nd-Drekkana (maraka) lord"); }
+
+    return { score: score, reasons: reasons };
+  }
+
+  function houseAffliction(ctx, h) {
+    var chart = ctx.chart, score = 0, reasons = [];
+    var occ = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"]
+      .filter(function (p) { return chart.planets[p].wholeSignHouse === h; });
+    var mal = occ.filter(isMalefic);
+    if (mal.length) { score += Math.min(mal.length * 0.8, 1.6); reasons.push("house " + h + " holds malefic(s) " + mal.join(", ")); }
+    var subLord = chart.cusps[h - 1].subLord;
+    var sig = kp.planetSignifications(chart, subLord);
+    var d = inter(sig.all, DIS);
+    if (d.length) {
+      var w = diseaseHouseWeight(d) * 0.6;
+      score += w;
+      if (w >= 0.8) reasons.push("the " + ordinal(h) + " cuspal sub-lord (" + subLord + ") signifies disease houses");
+    }
+    return { score: score, reasons: reasons, occupants: occ };
+  }
+
+  // planets relevant to a topic, for TIMING (tighter: karakas, topic malefics,
+  // and strong significators of the topic's own houses)
+  function relevantPlanets(ctx, topic) {
+    var set = topic.karakas.concat(topic.malefics || []);
+    topic.houses.forEach(function (h) {
+      kp.houseSignificators(ctx.chart, h).forEach(function (s) {
+        if (s.level <= 2) set.push(s.planet);
+      });
+    });
+    return uniq(set);
+  }
+
+  // pinpoint affected organ/body part from afflicted karakas + afflicted houses
+  function pinpointOrgan(ctx, topic, afflictedKarakas) {
+    var votes = {};
+    function add(b, w) { votes[b] = (votes[b] || 0) + w; }
+
+    // For topics that name a specific organ, lead with it; for open-ended
+    // topics (cancer / general health) derive the organ from the afflictions.
+    if (topic.bodyParts && topic.bodyParts.length && !topic.organSearch) {
+      topic.bodyParts.forEach(function (b, i) { add(b, 5 - i * 0.5); });
+    }
+
+    afflictedKarakas.forEach(function (k) {
+      (data.PLANET_BODY[k.planet] || []).slice(0, 3).forEach(function (b, i) { add(b, k.score * (i === 0 ? 1.3 : 1)); });
+      var s = ctx.chart.planets[k.planet] ? ctx.chart.planets[k.planet].signIndex : null;
+      if (s !== null) (data.SIGN_BODY[s] || []).slice(0, 2).forEach(function (b) { add(b, k.score * 0.5); });
+    });
+    // most afflicted relevant house -> its sign body
+    topic.houses.concat([6, 8]).forEach(function (h) {
+      var ha = houseAffliction(ctx, h);
+      if (ha.score > 0) {
+        var signIndex = (ctx.chart.lagnaSignIndex + h - 1) % 12;
+        (data.SIGN_BODY[signIndex] || []).slice(0, 2).forEach(function (b) { add(b, ha.score * 0.6); });
+      }
+    });
+    return Object.keys(votes).map(function (k) { return { name: k, score: votes[k] }; })
+      .sort(function (a, b) { return b.score - a.score; }).slice(0, 3);
+  }
+
+  // time the most sensitive window using the dasha timeline
+  function timeWindows(ctx, topic, relevant) {
+    var tl = ctx.timeline;
+    var now = ctx.nowMs;
+    var horizon = now + 45 * 365.25 * 86400000;
+    var malefRelevant = relevant.filter(function (p) { return isMalefic(p) || topic.malefics.indexOf(p) >= 0; });
+
+    var scored = tl.ads.filter(function (a) { return a.endMs > now && a.startMs < horizon; })
+      .map(function (a) {
+        var s = 0;
+        if (relevant.indexOf(a.mdLord) >= 0) s += 1.5;
+        if (relevant.indexOf(a.lord) >= 0) s += 1.5;
+        if (malefRelevant.indexOf(a.mdLord) >= 0) s += 0.8;
+        if (malefRelevant.indexOf(a.lord) >= 0) s += 1.0;
+        if (topic.karakas.indexOf(a.lord) >= 0) s += 0.8;
+        return { mdLord: a.mdLord, lord: a.lord, startMs: a.startMs, endMs: a.endMs, score: s };
+      })
+      .filter(function (a) { return a.score >= 2.5; });
+
+    // chronological, take earliest strong windows
+    scored.sort(function (a, b) { return a.startMs - b.startMs; });
+    var top = scored.slice(0, 3);
+
+    // refine the earliest strong window to a pratyantar sub-window
+    if (top.length) {
+      var w = top[0];
+      var pds = dasha.subPeriods(w.lord, w.startMs, w.endMs - w.startMs);
+      var best = null;
+      pds.forEach(function (pd) {
+        if (pd.endMs < now) return;
+        var rs = (relevant.indexOf(pd.lord) >= 0 ? 1 : 0) + (malefRelevant.indexOf(pd.lord) >= 0 ? 1 : 0);
+        if (!best || rs > best.rs) best = { pd: pd, rs: rs };
+      });
+      if (best && best.rs > 0) w.refine = best.pd;
+    }
+    return top;
+  }
+
+  /*
+   * analyze(ctx, questionText)
+   *   ctx = { chart, d6, d22Lord, n64Lord, timeline, nowMs }
+   */
+  function analyze(ctx, questionText) {
+    var cl = topics.classify(questionText);
+    var topic = cl.topic;
+    var relevant = relevantPlanets(ctx, topic);
+
+    // karaka affliction
+    var karakaAffl = topic.karakas.map(function (p) {
+      var a = planetAffliction(ctx, p);
+      return { planet: p, score: a.score, reasons: a.reasons };
+    });
+    var afflictedKarakas = karakaAffl.filter(function (k) { return k.score > 0.5; });
+
+    // house affliction
+    var houseAffl = uniq(topic.houses.concat([6, 8])).map(function (h) { return houseAffliction(ctx, h); });
+
+    var totalScore = 0, reasons = [];
+    karakaAffl.forEach(function (k) { totalScore += Math.max(0, k.score); k.reasons.forEach(function (r) { reasons.push(r); }); });
+    houseAffl.forEach(function (h) { totalScore += Math.max(0, h.score) * 0.8; h.reasons.forEach(function (r) { reasons.push(r); }); });
+
+    // likelihood band
+    var likelihood, klass;
+    if (totalScore >= 10) { likelihood = "High predisposition"; klass = "high"; }
+    else if (totalScore >= 7) { likelihood = "Elevated tendency"; klass = "high"; }
+    else if (totalScore >= 4.5) { likelihood = "Moderate tendency"; klass = "moderate"; }
+    else if (totalScore >= 2.5) { likelihood = "Mild indication"; klass = "moderate"; }
+    else { likelihood = "Low / not strongly indicated"; klass = "low"; }
+
+    var positive = totalScore >= 4.5;
+    var organs = positive ? pinpointOrgan(ctx, topic, afflictedKarakas.length ? afflictedKarakas : karakaAffl) : [];
+    var windows = positive ? timeWindows(ctx, topic, relevant) : [];
+
+    // verdict text
+    var art = /^[aeiou]/i.test(likelihood) ? "an" : "a";
+    var verdict;
+    if (!positive) {
+      verdict = "Astrologically, the chart does <strong>not show a strong predisposition</strong> to " +
+        topic.label + " at this level of analysis. Indicators are " + likelihood.toLowerCase() + ". " +
+        "This is reassuring astrologically but is not a clinical clearance.";
+    } else {
+      verdict = "The chart shows " + art + " <strong>" + likelihood.toLowerCase() + "</strong> toward " + topic.label +
+        ". This is an astrological inclination, <strong>not a certainty or a diagnosis</strong>." +
+        (organs.length ? " The area most implicated is the <strong>" + organs[0].name + "</strong>" +
+          (organs[1] ? " (also " + organs[1].name + ")" : "") + "." : "") +
+        (windows.length ? " The most sensitive period indicated is " + windowText(windows[0]) + "." : "");
+    }
+
+    return {
+      question: questionText,
+      topic: topic,
+      matched: cl.matched,
+      score: Math.round(totalScore * 10) / 10,
+      likelihood: likelihood,
+      likelihoodClass: klass,
+      positive: positive,
+      organs: organs,
+      windows: windows,
+      reasons: uniq(reasons),
+      verdict: verdict
+    };
+  }
+
+  function windowText(w) {
+    var base = w.mdLord + "\u2013" + w.lord + " dasha (" + dasha.fmtDate(w.startMs) + " \u2013 " + dasha.fmtDate(w.endMs) + ")";
+    if (w.refine) base += ", peaking around the " + w.refine.lord + " sub-period (" +
+      dasha.fmtDate(w.refine.startMs) + " \u2013 " + dasha.fmtDate(w.refine.endMs) + ")";
+    return base;
+  }
+
+  var api = { analyze: analyze, windowText: windowText };
+  root.AHS = root.AHS || {};
+  root.AHS.qa = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
 
@@ -2133,6 +2602,10 @@ button.ghost { background: transparent; }
   var dasha = window.AHS.dasha;
   var predict = window.AHS.predict;
   var d6engine = window.AHS.d6;
+  var qa = window.AHS.qa;
+  var topics = window.AHS.topics;
+
+  var qaContext = null; // populated after a screening is generated
 
   var $ = function (id) { return document.getElementById(id); };
   function el(tag, cls, html) {
@@ -2488,6 +2961,93 @@ button.ghost { background: transparent; }
     c.appendChild(bp);
   }
 
+  var QA_EXAMPLES = [
+    "Will I get a heart attack?",
+    "Will I get cancer?",
+    "Do I have a risk of diabetes?",
+    "Any risk to my kidneys?",
+    "Could I face depression or anxiety?",
+    "Am I prone to joint or bone problems?"
+  ];
+
+  function renderQAExamples() {
+    var c = $("qa-examples");
+    if (!c) return;
+    c.innerHTML = "<span class='hint'>Try:</span> ";
+    QA_EXAMPLES.forEach(function (q) {
+      var chip = el("span", "qa-chip", q);
+      chip.addEventListener("click", function () { $("qa-input").value = q; askQuestion(); });
+      c.appendChild(chip);
+    });
+  }
+
+  function renderQAReady(unknownTime) {
+    var out = $("qa-out");
+    if (!out) return;
+    if (unknownTime) {
+      out.innerHTML = "<p class='hint'>Specific question analysis needs a birth time (it relies on houses, the D6 chart and the maraka points). Please provide the time of birth and re-generate.</p>";
+    } else {
+      out.innerHTML = "<p class='hint'>Screening ready. Ask a question above.</p>";
+    }
+  }
+
+  function askQuestion() {
+    var out = $("qa-out");
+    var q = $("qa-input").value.trim();
+    if (!q) { out.innerHTML = "<p class='error'>Please type a question.</p>"; return; }
+    if (!qaContext) {
+      out.innerHTML = "<p class='error'>Please generate the screening first (fill birth details, including time, and click \u201cGenerate Health Screening\u201d).</p>";
+      return;
+    }
+    var a = qa.analyze(qaContext, q);
+    renderQAAnswer(a);
+  }
+
+  function renderQAAnswer(a) {
+    var out = $("qa-out");
+    out.innerHTML = "";
+    var box = el("div", "qa-answer " + a.likelihoodClass);
+    box.appendChild(el("h4", null,
+      "Q: " + escapeHtml(a.question) +
+      "<span class='qa-likelihood " + a.likelihoodClass + "'>" + a.likelihood + "</span>"));
+    box.appendChild(el("p", null, a.verdict));
+    if (!a.matched) {
+      box.appendChild(el("p", "hint", "I couldn't match a specific condition, so this was assessed as a general-health question. Try naming a condition (e.g. heart, cancer, diabetes, kidney, thyroid)."));
+    }
+
+    if (a.positive) {
+      if (a.organs.length) {
+        var bp = el("div", "bodyparts");
+        bp.appendChild(el("span", null, "<strong>Most implicated area(s):</strong> "));
+        a.organs.forEach(function (o) { bp.appendChild(el("span", "chip", o.name)); });
+        box.appendChild(bp);
+      }
+      if (a.windows.length) {
+        box.appendChild(el("p", null, "<strong>Most sensitive period(s):</strong>"));
+        a.windows.forEach(function (w) {
+          box.appendChild(el("div", "qa-window",
+            "<span class='when'>" + dasha.fmtDate(w.startMs) + " \u2013 " + dasha.fmtDate(w.endMs) + "</span> " +
+            "&mdash; " + w.mdLord + "\u2013" + w.lord + " dasha" +
+            (w.refine ? " (focus: " + w.refine.lord + " sub-period, " + dasha.fmtDate(w.refine.startMs) + " \u2013 " + dasha.fmtDate(w.refine.endMs) + ")" : "")));
+        });
+      }
+    }
+
+    if (a.reasons.length) {
+      box.appendChild(el("p", null, "<strong>Astrological basis:</strong>"));
+      var ul = el("ul");
+      a.reasons.slice(0, 6).forEach(function (r) { ul.appendChild(el("li", null, r)); });
+      box.appendChild(ul);
+    }
+    out.appendChild(box);
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
   function run(e) {
     if (e) e.preventDefault();
     var err = $("form-error");
@@ -2540,6 +3100,13 @@ button.ghost { background: transparent; }
         renderForecast(fc);
       }
 
+      // Enable the Ask-a-Question module with a ready context.
+      qaContext = f.unknownTime ? null : {
+        chart: natal, d6: d6chart, d22Lord: d22.lord, n64Lord: n64.lord,
+        timeline: dasha.timeline(natal.jd, natal.planets.Moon.lon), nowMs: Date.now()
+      };
+      renderQAReady(f.unknownTime);
+
       $("results").hidden = false;
       $("results").scrollIntoView({ behavior: "smooth" });
     } catch (ex) {
@@ -2576,6 +3143,9 @@ button.ghost { background: transparent; }
     $("city-btn").addEventListener("click", searchCity);
     $("city").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); searchCity(); } });
     $("sample-btn").addEventListener("click", loadSample);
+    $("qa-btn").addEventListener("click", askQuestion);
+    $("qa-input").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); askQuestion(); } });
+    renderQAExamples();
     $("unknown-time").addEventListener("change", function () {
       $("tob").disabled = this.checked;
     });

@@ -30,6 +30,11 @@ sidereal (Vedic) birth chart plus the current planetary transits, and produces a
 - **Period Health Forecast** — synthesises dasha lords + maraka points + KP
   significators + dignities to **pinpoint the most vulnerable body part and the
   most probable health issue** for the current period, with a risk rating.
+- **Ask a Question** — a natural-language module: ask e.g. *"Will I get a heart
+  attack?"* or *"Will I get cancer?"* and it classifies the theme, scores the
+  astrological predisposition, names the most implicated organ, and times the
+  most sensitive Vimshottari period. Framed as indication + timing, never a
+  medical diagnosis.
 - City search (via the free Open-Meteo geocoding API) or manual latitude / longitude /
   UTC-offset entry.
 - Two independent, rule-based analyses with a vitality/health index and body systems
@@ -67,6 +72,8 @@ js/
                       22nd Drekkana lord, 64th Navamsa lord
   dasha.js            Vimshottari Maha/Antar/Pratyantar dasha + current periods
   d6.js               D6 Shashthamsa (health/disease) chart analysis
+  health-topics.js    health-question knowledge base + keyword classifier
+  qa.js               natural-language question engine (likelihood, organ, timing)
   predict.js          synthesis -> pinpoints weakest body part & probable issue
   app.js              UI wiring (geocoding, rendering, orchestration)
 ```

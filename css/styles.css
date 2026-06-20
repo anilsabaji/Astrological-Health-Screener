@@ -188,6 +188,26 @@ button.ghost { background: transparent; }
 .disclaimer-foot ul { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: .88rem; }
 .disclaimer-foot li { margin: 6px 0; }
 
+/* Ask-a-question */
+.qa-examples { margin: 12px 0; }
+.qa-examples .qa-chip {
+  display: inline-block; cursor: pointer; background: var(--bg-2); border: 1px solid var(--line);
+  border-radius: 999px; padding: 6px 12px; font-size: .82rem; margin: 4px 6px 0 0; color: var(--muted);
+}
+.qa-examples .qa-chip:hover { border-color: var(--indigo); color: var(--text); }
+.qa-answer { margin-top: 16px; border-radius: 12px; padding: 16px 18px; border: 1px solid var(--line); background: var(--card-2); }
+.qa-answer.high { border-left: 5px solid var(--red); }
+.qa-answer.moderate { border-left: 5px solid var(--amber); }
+.qa-answer.low { border-left: 5px solid var(--green); }
+.qa-answer h4 { margin: 0 0 8px; }
+.qa-likelihood { font-size: .72rem; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: .5px; margin-left: 8px; }
+.qa-likelihood.high { background: rgba(239,106,106,.2); color: var(--red); }
+.qa-likelihood.moderate { background: rgba(232,184,75,.2); color: var(--amber); }
+.qa-likelihood.low { background: rgba(87,201,138,.2); color: var(--green); }
+.qa-window { background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; margin: 6px 0; font-size: .9rem; }
+.qa-window .when { color: var(--gold); font-weight: 600; }
+.qa-disclaimer { color: var(--amber); margin-top: 16px; }
+
 .site-footer { border-top: 1px solid var(--line); padding: 20px 0; color: var(--muted); font-size: .82rem; text-align: center; }
 .site-footer .credit { font-size: 1rem; color: var(--gold); margin: 0 0 6px; letter-spacing: .3px; }
 .site-footer .credit strong { color: var(--gold); }

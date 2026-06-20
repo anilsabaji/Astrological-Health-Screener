@@ -117,7 +117,8 @@
       </div>
 
       <nav class="tabs" id="tabs">
-        <button class="tab active" data-tab="chart">Birth Chart</button>
+        <button class="tab active" data-tab="ask">&#128172; Ask a Question</button>
+        <button class="tab" data-tab="chart">Birth Chart</button>
         <button class="tab" data-tab="transits">Current Transits</button>
         <button class="tab" data-tab="parashara">Parashara Analysis</button>
         <button class="tab" data-tab="kp">KP Analysis</button>
@@ -126,7 +127,25 @@
         <button class="tab" data-tab="divisional">Divisionals (D3)</button>
       </nav>
 
-      <div class="tab-panel active" id="tab-chart">
+      <div class="tab-panel active" id="tab-ask">
+        <div class="card">
+          <h3>Ask a specific health question</h3>
+          <p class="hint">Type a question in plain English. The module identifies the health theme, runs the relevant
+            astrological calculations (significators, D6, dasha timing, maraka points) and answers with a likelihood,
+            the most implicated organ/area, and the most sensitive time window.</p>
+          <div class="city-search">
+            <input type="text" id="qa-input" placeholder="e.g. Will I get a heart attack? / Will I get cancer? / Any risk to my kidneys?" />
+            <button type="button" id="qa-btn" class="primary">Ask</button>
+          </div>
+          <div class="qa-examples" id="qa-examples"></div>
+          <div id="qa-out"></div>
+          <p class="hint qa-disclaimer">&#9888; Answers are astrological <em>indications and risk-sensitive periods</em>, not a
+            medical diagnosis or a prediction of certainty. For any genuine health concern &mdash; especially serious ones &mdash;
+            please consult a qualified medical professional and get appropriate screening.</p>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-chart">
         <div class="card">
           <h3>Natal Chart <span class="sub" id="chart-asc"></span></h3>
           <div class="table-scroll">
@@ -243,6 +262,8 @@
   <script src="js/varga.js"></script>
   <script src="js/dasha.js"></script>
   <script src="js/d6.js"></script>
+  <script src="js/health-topics.js"></script>
+  <script src="js/qa.js"></script>
   <script src="js/predict.js"></script>
   <script src="js/app.js"></script>
 </body>

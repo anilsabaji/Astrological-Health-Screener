@@ -13,6 +13,10 @@
   var dasha = window.AHS.dasha;
   var predict = window.AHS.predict;
   var d6engine = window.AHS.d6;
+  var qa = window.AHS.qa;
+  var topics = window.AHS.topics;
+
+  var qaContext = null; // populated after a screening is generated
 
   var $ = function (id) { return document.getElementById(id); };
   function el(tag, cls, html) {
@@ -368,6 +372,93 @@
     c.appendChild(bp);
   }
 
+  var QA_EXAMPLES = [
+    "Will I get a heart attack?",
+    "Will I get cancer?",
+    "Do I have a risk of diabetes?",
+    "Any risk to my kidneys?",
+    "Could I face depression or anxiety?",
+    "Am I prone to joint or bone problems?"
+  ];
+
+  function renderQAExamples() {
+    var c = $("qa-examples");
+    if (!c) return;
+    c.innerHTML = "<span class='hint'>Try:</span> ";
+    QA_EXAMPLES.forEach(function (q) {
+      var chip = el("span", "qa-chip", q);
+      chip.addEventListener("click", function () { $("qa-input").value = q; askQuestion(); });
+      c.appendChild(chip);
+    });
+  }
+
+  function renderQAReady(unknownTime) {
+    var out = $("qa-out");
+    if (!out) return;
+    if (unknownTime) {
+      out.innerHTML = "<p class='hint'>Specific question analysis needs a birth time (it relies on houses, the D6 chart and the maraka points). Please provide the time of birth and re-generate.</p>";
+    } else {
+      out.innerHTML = "<p class='hint'>Screening ready. Ask a question above.</p>";
+    }
+  }
+
+  function askQuestion() {
+    var out = $("qa-out");
+    var q = $("qa-input").value.trim();
+    if (!q) { out.innerHTML = "<p class='error'>Please type a question.</p>"; return; }
+    if (!qaContext) {
+      out.innerHTML = "<p class='error'>Please generate the screening first (fill birth details, including time, and click \u201cGenerate Health Screening\u201d).</p>";
+      return;
+    }
+    var a = qa.analyze(qaContext, q);
+    renderQAAnswer(a);
+  }
+
+  function renderQAAnswer(a) {
+    var out = $("qa-out");
+    out.innerHTML = "";
+    var box = el("div", "qa-answer " + a.likelihoodClass);
+    box.appendChild(el("h4", null,
+      "Q: " + escapeHtml(a.question) +
+      "<span class='qa-likelihood " + a.likelihoodClass + "'>" + a.likelihood + "</span>"));
+    box.appendChild(el("p", null, a.verdict));
+    if (!a.matched) {
+      box.appendChild(el("p", "hint", "I couldn't match a specific condition, so this was assessed as a general-health question. Try naming a condition (e.g. heart, cancer, diabetes, kidney, thyroid)."));
+    }
+
+    if (a.positive) {
+      if (a.organs.length) {
+        var bp = el("div", "bodyparts");
+        bp.appendChild(el("span", null, "<strong>Most implicated area(s):</strong> "));
+        a.organs.forEach(function (o) { bp.appendChild(el("span", "chip", o.name)); });
+        box.appendChild(bp);
+      }
+      if (a.windows.length) {
+        box.appendChild(el("p", null, "<strong>Most sensitive period(s):</strong>"));
+        a.windows.forEach(function (w) {
+          box.appendChild(el("div", "qa-window",
+            "<span class='when'>" + dasha.fmtDate(w.startMs) + " \u2013 " + dasha.fmtDate(w.endMs) + "</span> " +
+            "&mdash; " + w.mdLord + "\u2013" + w.lord + " dasha" +
+            (w.refine ? " (focus: " + w.refine.lord + " sub-period, " + dasha.fmtDate(w.refine.startMs) + " \u2013 " + dasha.fmtDate(w.refine.endMs) + ")" : "")));
+        });
+      }
+    }
+
+    if (a.reasons.length) {
+      box.appendChild(el("p", null, "<strong>Astrological basis:</strong>"));
+      var ul = el("ul");
+      a.reasons.slice(0, 6).forEach(function (r) { ul.appendChild(el("li", null, r)); });
+      box.appendChild(ul);
+    }
+    out.appendChild(box);
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
   function run(e) {
     if (e) e.preventDefault();
     var err = $("form-error");
@@ -420,6 +511,13 @@
         renderForecast(fc);
       }
 
+      // Enable the Ask-a-Question module with a ready context.
+      qaContext = f.unknownTime ? null : {
+        chart: natal, d6: d6chart, d22Lord: d22.lord, n64Lord: n64.lord,
+        timeline: dasha.timeline(natal.jd, natal.planets.Moon.lon), nowMs: Date.now()
+      };
+      renderQAReady(f.unknownTime);
+
       $("results").hidden = false;
       $("results").scrollIntoView({ behavior: "smooth" });
     } catch (ex) {
@@ -456,6 +554,9 @@
     $("city-btn").addEventListener("click", searchCity);
     $("city").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); searchCity(); } });
     $("sample-btn").addEventListener("click", loadSample);
+    $("qa-btn").addEventListener("click", askQuestion);
+    $("qa-input").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); askQuestion(); } });
+    renderQAExamples();
     $("unknown-time").addEventListener("change", function () {
       $("tob").disabled = this.checked;
     });

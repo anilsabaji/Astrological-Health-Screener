@@ -99,7 +99,35 @@
     return d.getUTCDate() + " " + mo[d.getUTCMonth()] + " " + d.getUTCFullYear();
   }
 
-  var api = { compute: compute, subPeriods: subPeriods, fmtDate: fmtDate };
+  /*
+   * Full lifetime timeline of Maha + Antar dasha periods (one 120-year cycle
+   * from the virtual MD start). Used for event-timing scans.
+   * Returns { mds:[{lord,startMs,endMs}], ads:[{mdLord,lord,startMs,endMs}] }.
+   */
+  function timeline(jdBirth, moonLon) {
+    var span = 360 / 27;
+    var nakIdx = Math.floor(rev(moonLon) / span);
+    var startLord = NAKSHATRAS[nakIdx][1];
+    var posInNak = rev(moonLon) - nakIdx * span;
+    var frac = posInNak / span;
+    var startIdx = VIM_ORDER.indexOf(startLord);
+    var birthMs = jdToMs(jdBirth);
+    var t = birthMs - frac * VIM_YEARS[startLord] * YEAR_DAYS * DAY_MS;
+
+    var mds = [], ads = [];
+    for (var i = 0; i < 9; i++) {
+      var ml = VIM_ORDER[(startIdx + i) % 9];
+      var len = VIM_YEARS[ml] * YEAR_DAYS * DAY_MS;
+      mds.push({ lord: ml, startMs: t, endMs: t + len });
+      subPeriods(ml, t, len).forEach(function (a) {
+        ads.push({ mdLord: ml, lord: a.lord, startMs: a.startMs, endMs: a.endMs });
+      });
+      t += len;
+    }
+    return { mds: mds, ads: ads };
+  }
+
+  var api = { compute: compute, subPeriods: subPeriods, fmtDate: fmtDate, timeline: timeline };
   root.AHS = root.AHS || {};
   root.AHS.dasha = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
