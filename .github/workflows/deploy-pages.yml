@@ -1,0 +1,46 @@
+name: Deploy to GitHub Pages
+
+# Deploys the static site (index.html + css/ + js/) to GitHub Pages.
+# Runs on every push to main, and can be triggered manually.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Permissions needed for the GITHUB_TOKEN to deploy to Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment; cancel older in-progress runs.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Configures Pages and ENABLES it automatically if not already enabled.
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      # Upload the whole repository as the site (it is a static site rooted at index.html).
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "."
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
