@@ -163,6 +163,8 @@ button.ghost { background: transparent; }
 .disclaimer-foot li { margin: 6px 0; }
 
 .site-footer { border-top: 1px solid var(--line); padding: 20px 0; color: var(--muted); font-size: .82rem; text-align: center; }
+.site-footer .credit { font-size: 1rem; color: var(--gold); margin: 0 0 6px; letter-spacing: .3px; }
+.site-footer .credit strong { color: var(--gold); }
 
 @media (max-width: 680px) {
   .grid { grid-template-columns: 1fr; }
