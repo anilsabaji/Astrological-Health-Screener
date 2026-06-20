@@ -377,6 +377,47 @@
     });
   }
 
+  function renderKPSchedule(s) {
+    function badge(klass, label) { return "<span class='sev-tag " + klass + "'>" + label + "</span>"; }
+    function mark(cur) { return cur ? "<strong>&#9654;</strong>" : ""; }
+    var fd = dasha.fmtDate;
+
+    var md = $("kp-md-table").querySelector("tbody"); md.innerHTML = "";
+    s.mds.forEach(function (m) {
+      md.appendChild(el("tr", m.current ? "row-current" : null,
+        "<td>" + mark(m.current) + "</td><td>" + m.lord + "</td><td>" + fd(m.startMs) + "</td><td>" + fd(m.endMs) +
+        "</td><td>" + m.signifies.join(", ") + "</td><td>" + badge(m.klass, m.label) + "</td>"));
+    });
+
+    var ad = $("kp-ad-table").querySelector("tbody"); ad.innerHTML = "";
+    s.ads.forEach(function (a) {
+      ad.appendChild(el("tr", a.current ? "row-current" : null,
+        "<td>" + mark(a.current) + "</td><td>" + a.mdLord + "</td><td>" + a.lord + "</td><td>" + fd(a.startMs) +
+        "</td><td>" + fd(a.endMs) + "</td><td>" + badge(a.klass, a.label) + "</td>"));
+    });
+
+    var pd = $("kp-pd-table").querySelector("tbody"); pd.innerHTML = "";
+    s.pds.forEach(function (p) {
+      pd.appendChild(el("tr", p.current ? "row-current" : null,
+        "<td>" + mark(p.current) + "</td><td>" + p.mdLord + "</td><td>" + p.adLord + "</td><td>" + p.lord +
+        "</td><td>" + fd(p.startMs) + "</td><td>" + fd(p.endMs) + "</td><td>" + badge(p.klass, p.label) + "</td>"));
+    });
+
+    var sc = $("kp-sensitive-out");
+    sc.innerHTML = "<h3>Health-sensitive upcoming periods (KP)</h3>";
+    if (!s.sensitive.length) {
+      sc.appendChild(el("p", "hint", "No strongly adverse Antar Dashas (joint MD+AD on houses 6/8/12) found in the next ~30 years. Periods still vary; see the tables above."));
+    } else {
+      sc.appendChild(el("p", null, "These upcoming Antar Dashas read as <strong>adverse</strong> in KP terms (both the Maha and Antar lords signify disease houses 6/8/12). Use them as windows for extra preventive care &amp; screening &mdash; not as predictions of certainty:"));
+      s.sensitive.forEach(function (a) {
+        sc.appendChild(el("div", "qa-window",
+          "<span class='when'>" + fd(a.startMs) + " \u2013 " + fd(a.endMs) + "</span> &mdash; " +
+          a.mdLord + "\u2013" + a.lord + " dasha " + badge("high", "Adverse") +
+          " <span class='hint'>disease houses [" + a.disease.join(", ") + "]</span>"));
+      });
+    }
+  }
+
   function renderForecast(fc) {
     var c = $("forecast-out");
     c.innerHTML = "<h3>Period Health Forecast</h3>";
@@ -592,6 +633,7 @@
 
       // Dasha + divisionals + forecast
       var dz = dasha.compute(natal.jd, natal.planets.Moon.lon);
+      var qaTimeline = dasha.timeline(natal.jd, natal.planets.Moon.lon);
       var n64 = varga.navamsa64(natal.planets.Moon.lon);
       var d22 = varga.drekkana22(natal.ascendant.signIndex, natal.ascendant.degInSign);
       var d6chart = varga.buildD6(natal);
@@ -631,12 +673,13 @@
         renderForecastHighlight(fc);
         renderForecast(fc);
         renderKPDasha(kpdasha.analyze(natal, dz));
+        renderKPSchedule(kpdasha.schedule(natal, qaTimeline, Date.now()));
       }
 
       // Enable the Ask-a-Question module with a ready context.
       qaContext = f.unknownTime ? null : {
         chart: natal, d6: d6chart, d22Lord: d22.lord, n64Lord: n64.lord,
-        timeline: dasha.timeline(natal.jd, natal.planets.Moon.lon), nowMs: Date.now()
+        timeline: qaTimeline, nowMs: Date.now()
       };
       renderQAReady(f.unknownTime);
       renderLetterhead();

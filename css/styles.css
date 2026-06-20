@@ -148,6 +148,7 @@ button.ghost { background: transparent; }
 .data-table th, .data-table td { padding: 9px 10px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
 .data-table th { color: var(--gold); font-weight: 600; }
 .data-table tbody tr:hover { background: var(--card-2); }
+.data-table tr.row-current { background: rgba(124,131,247,.14); }
 .sub { font-size: .85rem; color: var(--muted); font-weight: normal; margin-left: 8px; }
 
 .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .72rem; font-weight: 700; }

@@ -20,6 +20,7 @@
   var core = R ? require("./astro-core.js") : root.AHS.core;
   var data = R ? require("./data.js") : root.AHS.data;
   var kp = R ? require("./kp.js") : root.AHS.kp;
+  var dasha = R ? require("./dasha.js") : root.AHS.dasha;
 
   var DISEASE = [6, 8, 12];
   var RECOVERY = [1, 5, 11];
@@ -111,7 +112,74 @@
     };
   }
 
-  var api = { analyze: analyze };
+  // ---- Forward-looking KP dasha schedule (upcoming MD / AD / PD) ----
+  function classify1(disease, recovery) {
+    if (disease.length && !recovery.length) return { klass: "high", label: "Adverse" };
+    if (disease.length) return { klass: "moderate", label: "Mixed" };
+    if (recovery.length) return { klass: "low", label: "Supportive" };
+    return { klass: "low", label: "Neutral" };
+  }
+  function lordSig(chart, lord) {
+    var sig = kp.planetSignifications(chart, lord);
+    var all = sig.all.slice().sort(function (a, b) { return a - b; });
+    return { all: all, disease: inter(all, DISEASE), recovery: inter(all, RECOVERY) };
+  }
+  function jointClassify(chart, lords) {
+    var dCount = 0, rCount = 0, dh = [], rh = [];
+    lords.forEach(function (l) {
+      var s = lordSig(chart, l);
+      if (s.disease.length) dCount++;
+      if (s.recovery.length) rCount++;
+      dh = dh.concat(s.disease); rh = rh.concat(s.recovery);
+    });
+    var klass, label;
+    if (dCount === 0) { klass = "low"; label = "Favourable"; }
+    else if (rCount === 0) { if (dCount >= lords.length) { klass = "high"; label = "Adverse"; } else { klass = "moderate"; label = "Caution"; } }
+    else { klass = "moderate"; label = "Mixed"; }
+    return { klass: klass, label: label, disease: uniq(dh).sort(function (a, b) { return a - b; }), recovery: uniq(rh) };
+  }
+
+  /*
+   * schedule(chart, timeline, nowMs)
+   * Classifies upcoming periods in KP health terms:
+   *   mds : all Maha Dashas ending in the future
+   *   ads : Antar Dashas over the next ~40 years
+   *   pds : Pratyantar Dashas of the current & next Antar Dasha
+   *   sensitive : upcoming Antar Dashas that read as Adverse (joint MD+AD on 6/8/12)
+   */
+  function schedule(chart, timeline, nowMs) {
+    if (nowMs === undefined) nowMs = Date.now();
+    var YEAR = 365.25 * 86400000;
+
+    var mds = timeline.mds.filter(function (m) { return m.endMs > nowMs; }).map(function (m) {
+      var s = lordSig(chart, m.lord); var c = classify1(s.disease, s.recovery);
+      return { lord: m.lord, startMs: m.startMs, endMs: m.endMs, signifies: s.all, disease: s.disease, recovery: s.recovery, klass: c.klass, label: c.label, current: nowMs >= m.startMs && nowMs < m.endMs };
+    });
+
+    var ads = timeline.ads.filter(function (a) { return a.endMs > nowMs && a.startMs < nowMs + 40 * YEAR; }).map(function (a) {
+      var j = jointClassify(chart, [a.mdLord, a.lord]);
+      return { mdLord: a.mdLord, lord: a.lord, startMs: a.startMs, endMs: a.endMs, klass: j.klass, label: j.label, disease: j.disease, current: nowMs >= a.startMs && nowMs < a.endMs };
+    });
+
+    var sorted = timeline.ads.slice().sort(function (x, y) { return x.startMs - y.startMs; });
+    var idx = 0;
+    for (var i = 0; i < sorted.length; i++) { if (nowMs >= sorted[i].startMs && nowMs < sorted[i].endMs) { idx = i; break; } }
+    var pds = [];
+    [idx, idx + 1].forEach(function (k) {
+      var ad = sorted[k]; if (!ad) return;
+      dasha.subPeriods(ad.lord, ad.startMs, ad.endMs - ad.startMs).forEach(function (pd) {
+        if (pd.endMs < nowMs) return;
+        var j = jointClassify(chart, [ad.mdLord, ad.lord, pd.lord]);
+        pds.push({ mdLord: ad.mdLord, adLord: ad.lord, lord: pd.lord, startMs: pd.startMs, endMs: pd.endMs, klass: j.klass, label: j.label, current: nowMs >= pd.startMs && nowMs < pd.endMs });
+      });
+    });
+
+    var sensitive = ads.filter(function (a) { return a.klass === "high" && a.startMs < nowMs + 30 * YEAR; }).slice(0, 8);
+
+    return { mds: mds, ads: ads, pds: pds, sensitive: sensitive };
+  }
+
+  var api = { analyze: analyze, schedule: schedule };
   root.AHS = root.AHS || {};
   root.AHS.kpdasha = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;

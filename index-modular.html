@@ -158,6 +158,7 @@
         <button class="tab" data-tab="parashara">Parashara Analysis</button>
         <button class="tab" data-tab="kp">KP Analysis</button>
         <button class="tab" data-tab="dasha">Dasha &amp; Forecast</button>
+        <button class="tab" data-tab="kpdasha">KP Dasha</button>
         <button class="tab" data-tab="d6">D6 Health</button>
         <button class="tab" data-tab="divisional">Divisionals (D3)</button>
       </nav>
@@ -233,7 +234,38 @@
           <p class="hint">Running Maha &middot; Antar &middot; Pratyantar periods as of today (365.25-day year).</p>
         </div>
         <div class="card" id="forecast-out"></div>
+      </div>
+
+      <div class="tab-panel" id="tab-kpdasha">
         <div class="card" id="kpdasha-out"></div>
+        <div class="card">
+          <h3>Upcoming Maha Dashas <span class="sub">KP health verdict</span></h3>
+          <div class="table-scroll">
+            <table class="data-table" id="kp-md-table">
+              <thead><tr><th></th><th>Maha Dasha</th><th>From</th><th>To</th><th>Signifies</th><th>KP Health</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Antar Dashas <span class="sub">current &amp; upcoming (~40 yrs)</span></h3>
+          <div class="table-scroll">
+            <table class="data-table" id="kp-ad-table">
+              <thead><tr><th></th><th>Maha</th><th>Antar</th><th>From</th><th>To</th><th>KP Health</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Pratyantar Dashas <span class="sub">current &amp; next Antar Dasha</span></h3>
+          <div class="table-scroll">
+            <table class="data-table" id="kp-pd-table">
+              <thead><tr><th></th><th>Maha</th><th>Antar</th><th>Pratyantar</th><th>From</th><th>To</th><th>KP Health</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card" id="kp-sensitive-out"></div>
       </div>
 
       <div class="tab-panel" id="tab-d6">
