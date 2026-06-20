@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Astrological Health Screener &middot; Parashara &amp; KP</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <h1>&#10024; Astrological Health Screener</h1>
+      <p class="tagline">Vedic health analysis using <strong>Parashara</strong> &amp; <strong>Krishnamurti Paddhati (KP)</strong>, with live planetary transits.</p>
+    </div>
+  </header>
+
+  <div class="disclaimer-banner">
+    <div class="wrap">
+      <strong>Important:</strong> This tool provides astrological interpretation for educational and
+      self-reflection purposes only. It is <strong>not medical advice</strong> and must not be used to
+      diagnose, treat, or make decisions about any health condition. Always consult a qualified
+      healthcare professional.
+    </div>
+  </div>
+
+  <main class="wrap">
+    <!-- ================= INPUT FORM ================= -->
+    <section class="card" id="form-card">
+      <h2>Birth Details</h2>
+      <form id="birth-form" autocomplete="off">
+        <div class="grid">
+          <div class="field">
+            <label for="name">Name <span class="opt">(optional)</span></label>
+            <input type="text" id="name" placeholder="e.g. Anil" />
+          </div>
+
+          <div class="field">
+            <label for="dob">Date of Birth</label>
+            <input type="date" id="dob" required />
+          </div>
+
+          <div class="field">
+            <label for="tob">Time of Birth <span class="opt">(24h, local)</span></label>
+            <input type="time" id="tob" required step="60" />
+          </div>
+
+          <div class="field">
+            <label for="unknown-time">
+              <input type="checkbox" id="unknown-time" /> Birth time unknown (use 12:00, skip houses/ascendant)
+            </label>
+          </div>
+        </div>
+
+        <hr />
+
+        <h3>Birth Place</h3>
+        <div class="grid">
+          <div class="field field-wide">
+            <label for="city">Search city / town</label>
+            <div class="city-search">
+              <input type="text" id="city" placeholder="Start typing a city, e.g. Mumbai" />
+              <button type="button" id="city-btn">Search</button>
+            </div>
+            <ul id="city-results" class="city-results" hidden></ul>
+            <p class="hint" id="place-resolved"></p>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="lat">Latitude <span class="opt">(&deg;, N positive)</span></label>
+            <input type="number" id="lat" step="0.0001" min="-90" max="90" placeholder="e.g. 19.0760" required />
+          </div>
+          <div class="field">
+            <label for="lon">Longitude <span class="opt">(&deg;, E positive)</span></label>
+            <input type="number" id="lon" step="0.0001" min="-180" max="180" placeholder="e.g. 72.8777" required />
+          </div>
+          <div class="field">
+            <label for="tz">UTC offset <span class="opt">(hours)</span></label>
+            <input type="number" id="tz" step="0.25" min="-12" max="14" placeholder="e.g. 5.5" required />
+            <p class="hint">For India use 5.5. Confirm DST for the birth date if applicable.</p>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="primary" id="run-btn">Generate Health Screening</button>
+          <button type="button" id="sample-btn" class="ghost">Load sample</button>
+        </div>
+        <p class="error" id="form-error" hidden></p>
+      </form>
+    </section>
+
+    <!-- ================= RESULTS ================= -->
+    <section id="results" hidden>
+      <div class="card" id="overview-card">
+        <h2>Screening Overview</h2>
+        <p id="overview-meta" class="meta"></p>
+        <div class="score-row">
+          <div class="score-box parashara">
+            <span class="score-label">Parashara vitality index</span>
+            <span class="score-value" id="par-score">--</span>
+          </div>
+          <div class="score-box kp">
+            <span class="score-label">KP health index</span>
+            <span class="score-value" id="kp-score">--</span>
+          </div>
+        </div>
+      </div>
+
+      <nav class="tabs" id="tabs">
+        <button class="tab active" data-tab="chart">Birth Chart</button>
+        <button class="tab" data-tab="transits">Current Transits</button>
+        <button class="tab" data-tab="parashara">Parashara Analysis</button>
+        <button class="tab" data-tab="kp">KP Analysis</button>
+      </nav>
+
+      <div class="tab-panel active" id="tab-chart">
+        <div class="card">
+          <h3>Natal Chart <span class="sub" id="chart-asc"></span></h3>
+          <div class="table-scroll">
+            <table class="data-table" id="natal-table">
+              <thead>
+                <tr><th>Body</th><th>Sign</th><th>Deg</th><th>Nakshatra</th><th>Pada</th><th>Sub-Lord</th><th>House (P)</th><th>House (WS)</th><th>Dignity</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="hint">P = Placidus house (KP) &middot; WS = Whole-sign house (Parashara). Ayanamsa: Lahiri.</p>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-transits">
+        <div class="card">
+          <h3>Current Planetary Transits <span class="sub" id="transit-time"></span></h3>
+          <div class="table-scroll">
+            <table class="data-table" id="transit-table">
+              <thead>
+                <tr><th>Body</th><th>Sign</th><th>Deg</th><th>Nakshatra</th><th>Sub-Lord</th><th>Transits natal house</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="hint">Gochara (transit) through natal whole-sign houses. Transits over the natal Ascendant, Moon and houses 6/8/12 are most relevant to health timing.</p>
+          <div id="transit-flags"></div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-parashara">
+        <div class="card" id="parashara-out"></div>
+      </div>
+
+      <div class="tab-panel" id="tab-kp">
+        <div class="card" id="kp-out"></div>
+      </div>
+
+      <div class="card disclaimer-foot">
+        <h3>Methodology &amp; Limitations</h3>
+        <ul>
+          <li>Planetary positions use a compact analytical ephemeris (Schlyter's method) with the Lahiri ayanamsa for sidereal longitudes. Accuracy is within a few arc-minutes &mdash; sufficient for sign, nakshatra and KP sub-divisions.</li>
+          <li>Parashara analysis uses whole-sign houses; KP analysis uses Placidus cusps and cuspal sub-lords.</li>
+          <li>Interpretations are rule-based summaries of classical significations, not a substitute for an experienced astrologer or, above all, a medical professional.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>For educational use only &middot; Not medical advice &middot; Built with classical Parashara &amp; KP principles.</p>
+    </div>
+  </footer>
+
+  <!-- Engine scripts (order matters) -->
+  <script src="js/ephemeris.js"></script>
+  <script src="js/astro-core.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/parashara.js"></script>
+  <script src="js/kp.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
