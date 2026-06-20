@@ -459,6 +459,16 @@
     });
   }
 
+  function printReport() {
+    if ($("results").hidden) {
+      alert("Please generate the screening first, then print.");
+      return;
+    }
+    var d = new Date();
+    $("report-date").textContent = "Report generated " + d.toLocaleString();
+    window.print();
+  }
+
   function run(e) {
     if (e) e.preventDefault();
     var err = $("form-error");
@@ -557,6 +567,7 @@
     $("qa-btn").addEventListener("click", askQuestion);
     $("qa-input").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); askQuestion(); } });
     renderQAExamples();
+    $("print-btn").addEventListener("click", printReport);
     $("unknown-time").addEventListener("change", function () {
       $("tob").disabled = this.checked;
     });
