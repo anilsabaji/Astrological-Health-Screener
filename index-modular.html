@@ -82,6 +82,28 @@
           </div>
         </div>
 
+        <details class="letterhead-config">
+          <summary>Practitioner / clinic letterhead <span class="opt">(optional, appears on the report)</span></summary>
+          <div class="grid">
+            <div class="field">
+              <label for="lh-name">Practitioner / clinic name</label>
+              <input type="text" id="lh-name" value="Dr. Anil Sabaji" />
+            </div>
+            <div class="field">
+              <label for="lh-tagline">Tagline / credentials</label>
+              <input type="text" id="lh-tagline" placeholder="Vedic Astrologer &amp; Health Consultant" value="Vedic Astrologer &amp; Health Consultant" />
+            </div>
+            <div class="field">
+              <label for="lh-contact">Contact (email / phone / address)</label>
+              <input type="text" id="lh-contact" value="anilsabaji@gmail.com" />
+            </div>
+            <div class="field">
+              <label for="lh-logo">Logo image <span class="opt">(optional)</span></label>
+              <input type="file" id="lh-logo" accept="image/*" />
+            </div>
+          </div>
+        </details>
+
         <div class="actions">
           <button type="submit" class="primary" id="run-btn">Generate Health Screening</button>
           <button type="button" id="sample-btn" class="ghost">Load sample</button>
@@ -92,6 +114,14 @@
 
     <!-- ================= RESULTS ================= -->
     <section id="results" hidden>
+      <div class="letterhead" id="letterhead" hidden>
+        <img id="lh-logo-img" class="lh-logo" alt="logo" hidden />
+        <div class="lh-text">
+          <div class="lh-name" id="lh-name-out"></div>
+          <div class="lh-tagline" id="lh-tagline-out"></div>
+          <div class="lh-contact" id="lh-contact-out"></div>
+        </div>
+      </div>
       <div class="report-actions">
         <button type="button" id="print-btn" class="primary">&#128424; Print / Save as PDF</button>
         <span class="report-date" id="report-date"></span>

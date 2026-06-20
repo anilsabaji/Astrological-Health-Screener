@@ -223,59 +223,47 @@ button.ghost { background: transparent; }
 .report-actions { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
 .report-date { color: var(--muted); font-size: .85rem; }
 
-/* ============ PRINT / SAVE-AS-PDF ============ */
+/* Letterhead */
+.letterhead-config { margin-top: 18px; border: 1px solid var(--line); border-radius: 9px; padding: 10px 14px; background: var(--bg-2); }
+.letterhead-config summary { cursor: pointer; color: var(--gold); font-size: .9rem; }
+.letterhead-config .grid { margin-top: 14px; }
+.letterhead {
+  display: flex; align-items: center; gap: 18px; margin-bottom: 16px;
+  padding: 16px 20px; border-radius: 12px;
+  background: linear-gradient(135deg, #1c2142 0%, #2a2150 100%);
+  border: 1px solid var(--gold); border-left: 6px solid var(--gold);
+}
+.letterhead .lh-logo { max-height: 64px; max-width: 64px; border-radius: 8px; object-fit: contain; background: #fff; padding: 4px; }
+.letterhead .lh-name { font-size: 1.3rem; font-weight: 800; color: var(--gold); }
+.letterhead .lh-tagline { color: var(--indigo); font-size: .95rem; margin-top: 2px; }
+.letterhead .lh-contact { color: var(--muted); font-size: .85rem; margin-top: 4px; }
+
+/* ============ PRINT / SAVE-AS-PDF (vibrant colour) ============ */
 @media print {
-  @page { margin: 14mm; }
-  body { background: #fff !important; color: #16161f !important; }
-  .wrap { max-width: none; padding: 0; }
+  @page { margin: 10mm; }
+  /* Force browsers to render background colours/gradients in the PDF */
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+
+  body { background: #0e1020 !important; }
+  .wrap { max-width: none; padding: 0 6mm; }
 
   /* Hide interactive / input-only chrome */
   #form-card, .tabs, .report-actions, .actions,
-  .city-search, .city-results, #qa-examples, #qa-btn, #qa-input,
-  .disclaimer-banner, .qa-examples { display: none !important; }
+  .city-search, .city-results, #qa-examples, .qa-examples,
+  #qa-btn, #qa-input { display: none !important; }
 
   /* Show every tab panel as one continuous report */
   .tab-panel { display: block !important; page-break-inside: auto; }
   #results { display: block !important; }
 
-  .site-header { padding: 0 0 8px; text-align: left; }
-  .site-header h1 { color: #1a1a40 !important; font-size: 20pt; }
-  .tagline { color: #444 !important; }
-
-  .card {
-    background: #fff !important; box-shadow: none !important;
-    border: 1px solid #bbb !important; border-radius: 6px;
-    padding: 12px 14px; margin: 0 0 12px; page-break-inside: avoid;
+  /* Keep the vibrant theme; just tidy spacing & avoid awkward splits */
+  .card, .letterhead, .finding, .qa-answer, .score-box, .forecast-highlight {
+    box-shadow: none !important; page-break-inside: avoid;
   }
-  .card h2, .card h3, .card h4, .forecast-highlight h3 { color: #1a1a40 !important; }
-
-  /* Force readable dark text everywhere */
-  p, li, td, th, span, strong, em, div { color: #16161f !important; }
-  .hint, .meta, .sub, .report-date { color: #555 !important; }
-
-  /* Tables */
-  .data-table th { color: #1a1a40 !important; border-bottom: 1px solid #999 !important; }
-  .data-table td { border-bottom: 1px solid #ddd !important; }
-  .data-table tbody tr:hover { background: none !important; }
+  .letterhead { display: flex !important; }
   .table-scroll { overflow: visible !important; }
+  .data-table { font-size: 8.5pt; }
 
-  /* Scores & chips: use borders instead of background fills */
-  .score-row { display: flex; gap: 10px; }
-  .score-box { border: 1px solid #999 !important; background: #fff !important; }
-  .score-value { color: #1a1a40 !important; }
-  .forecast-highlight { background: #fff !important; border: 1px solid #888 !important; }
-  .finding { background: #fff !important; border: 1px solid #ccc !important; border-left: 4px solid #888 !important; }
-  .finding.high, .qa-answer.high { border-left-color: #c0392b !important; }
-  .finding.moderate, .qa-answer.moderate { border-left-color: #b8860b !important; }
-  .chip, .focus-chip, .issue-chip, .period-pill, .flag, .badge, .sev-tag, .qa-likelihood, .qa-window {
-    background: #fff !important; border: 1px solid #999 !important; color: #16161f !important;
-  }
-  .qa-answer { background: #fff !important; border: 1px solid #aaa !important; }
-
-  /* Print-friendly section breaks */
-  #tab-chart, #tab-parashara, #tab-kp, #tab-dasha, #tab-d6 { page-break-before: always; }
-
-  .site-footer { border-top: 1px solid #999; color: #333 !important; }
-  .site-footer .credit, .site-footer .credit strong, .site-footer .credit a { color: #1a1a40 !important; }
-  a { color: #16161f !important; text-decoration: none; }
+  /* Major sections start on a fresh page */
+  #tab-chart, #tab-parashara, #tab-kp, #tab-dasha, #tab-d6, #tab-divisional { page-break-before: always; }
 }

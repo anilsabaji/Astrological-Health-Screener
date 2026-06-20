@@ -17,6 +17,7 @@
   var topics = window.AHS.topics;
 
   var qaContext = null; // populated after a screening is generated
+  var logoDataUrl = null; // letterhead logo, read client-side
 
   var $ = function (id) { return document.getElementById(id); };
   function el(tag, cls, html) {
@@ -469,6 +470,20 @@
     window.print();
   }
 
+  function renderLetterhead() {
+    var name = $("lh-name").value.trim();
+    var tagline = $("lh-tagline").value.trim();
+    var contact = $("lh-contact").value.trim();
+    var lh = $("letterhead");
+    if (!name && !tagline && !contact && !logoDataUrl) { lh.hidden = true; return; }
+    lh.hidden = false;
+    $("lh-name-out").textContent = name;
+    $("lh-tagline-out").textContent = tagline;
+    $("lh-contact-out").textContent = contact;
+    var img = $("lh-logo-img");
+    if (logoDataUrl) { img.src = logoDataUrl; img.hidden = false; } else { img.hidden = true; }
+  }
+
   function run(e) {
     if (e) e.preventDefault();
     var err = $("form-error");
@@ -527,6 +542,7 @@
         timeline: dasha.timeline(natal.jd, natal.planets.Moon.lon), nowMs: Date.now()
       };
       renderQAReady(f.unknownTime);
+      renderLetterhead();
 
       $("results").hidden = false;
       $("results").scrollIntoView({ behavior: "smooth" });
@@ -568,6 +584,13 @@
     $("qa-input").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); askQuestion(); } });
     renderQAExamples();
     $("print-btn").addEventListener("click", printReport);
+    $("lh-logo").addEventListener("change", function (e) {
+      var file = e.target.files && e.target.files[0];
+      if (!file) { logoDataUrl = null; return; }
+      var reader = new FileReader();
+      reader.onload = function (ev) { logoDataUrl = ev.target.result; renderLetterhead(); };
+      reader.readAsDataURL(file);
+    });
     $("unknown-time").addEventListener("change", function () {
       $("tob").disabled = this.checked;
     });
