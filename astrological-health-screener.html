@@ -110,6 +110,31 @@ button.ghost { background: transparent; }
 }
 .score-box.parashara { border-color: rgba(124,131,247,.5); }
 .score-box.kp { border-color: rgba(242,196,109,.5); }
+.score-box.risk { border-color: rgba(239,106,106,.5); }
+.score-box.risk .score-value { font-size: 1.6rem; padding-top: 8px; }
+.risk-high { color: var(--red); }
+.risk-moderate { color: var(--amber); }
+.risk-low { color: var(--green); }
+
+.forecast-highlight {
+  margin-top: 16px; border-radius: 12px; padding: 16px 18px;
+  background: linear-gradient(180deg, rgba(124,131,247,.14), rgba(124,131,247,.05));
+  border: 1px solid rgba(124,131,247,.45);
+}
+.forecast-highlight h3 { margin: 0 0 8px; color: var(--gold); }
+.forecast-highlight .focus-parts { margin-top: 10px; }
+.forecast-highlight .focus-chip {
+  display: inline-block; background: rgba(239,106,106,.16); border: 1px solid rgba(239,106,106,.4);
+  color: #ffd0d0; border-radius: 999px; padding: 4px 12px; font-size: .85rem; margin: 4px 6px 0 0; font-weight: 600;
+}
+.forecast-highlight .issue-chip {
+  display: inline-block; background: rgba(232,184,75,.14); border: 1px solid rgba(232,184,75,.4);
+  color: var(--amber); border-radius: 999px; padding: 4px 12px; font-size: .85rem; margin: 4px 6px 0 0;
+}
+.period-pill {
+  display: inline-block; background: var(--bg-2); border: 1px solid var(--indigo);
+  color: var(--text); border-radius: 8px; padding: 4px 10px; font-size: .85rem; margin: 2px 4px 2px 0;
+}
 .score-label { display: block; color: var(--muted); font-size: .82rem; }
 .score-value { display: block; font-size: 2.4rem; font-weight: 800; margin-top: 4px; }
 
@@ -278,7 +303,12 @@ button.ghost { background: transparent; }
             <span class="score-label">KP health index</span>
             <span class="score-value" id="kp-score">--</span>
           </div>
+          <div class="score-box risk">
+            <span class="score-label">Current-period risk</span>
+            <span class="score-value" id="risk-level">--</span>
+          </div>
         </div>
+        <div id="forecast-highlight" class="forecast-highlight" hidden></div>
       </div>
 
       <nav class="tabs" id="tabs">
@@ -286,6 +316,8 @@ button.ghost { background: transparent; }
         <button class="tab" data-tab="transits">Current Transits</button>
         <button class="tab" data-tab="parashara">Parashara Analysis</button>
         <button class="tab" data-tab="kp">KP Analysis</button>
+        <button class="tab" data-tab="dasha">Dasha &amp; Forecast</button>
+        <button class="tab" data-tab="divisional">Divisionals (D3)</button>
       </nav>
 
       <div class="tab-panel active" id="tab-chart">
@@ -325,6 +357,41 @@ button.ghost { background: transparent; }
 
       <div class="tab-panel" id="tab-kp">
         <div class="card" id="kp-out"></div>
+      </div>
+
+      <div class="tab-panel" id="tab-dasha">
+        <div class="card">
+          <h3>Vimshottari Dasha <span class="sub" id="dasha-meta"></span></h3>
+          <div class="table-scroll">
+            <table class="data-table" id="dasha-table">
+              <thead>
+                <tr><th>Level</th><th>Lord</th><th>From</th><th>To</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="hint">Running Maha &middot; Antar &middot; Pratyantar periods as of today (365.25-day year).</p>
+        </div>
+        <div class="card" id="forecast-out"></div>
+      </div>
+
+      <div class="tab-panel" id="tab-divisional">
+        <div class="card">
+          <h3>Longevity / Maraka points</h3>
+          <div id="maraka-out"></div>
+        </div>
+        <div class="card">
+          <h3>D3 Drekkana Chart <span class="sub" id="d3-asc"></span></h3>
+          <div class="table-scroll">
+            <table class="data-table" id="d3-table">
+              <thead>
+                <tr><th>Body</th><th>D3 Sign</th><th>D3 House</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="hint">Drekkana (D3): each sign split into three 10&deg; parts (1st = same sign, 2nd = 5th sign, 3rd = 9th sign). Used here for constitution/longevity context.</p>
+        </div>
       </div>
 
       <div class="card disclaimer-foot">
@@ -1479,6 +1546,381 @@ button.ghost { background: transparent; }
 })(typeof window !== "undefined" ? window : globalThis);
 
 
+/* ===== js/varga.js ===== */
+/*
+ * varga.js
+ * Divisional (varga) charts and classical longevity/maraka points used for
+ * health timing:
+ *   - D3 Drekkana chart (each sign split into three 10 deg parts)
+ *   - D9 Navamsa sign helper
+ *   - 22nd Drekkana lord (from Lagna)  -> Khara, cause-of-affliction point
+ *   - 64th Navamsa lord (from Moon)    -> Khara, cause-of-affliction point
+ *
+ * Drekkana (D3) mapping (Parashara):
+ *   1st drekkana (0-10 deg):  same sign
+ *   2nd drekkana (10-20 deg): 5th sign from it
+ *   3rd drekkana (20-30 deg): 9th sign from it
+ *
+ * Works in browser (window.AHS.varga) and Node.
+ */
+(function (root) {
+  "use strict";
+
+  var core = (typeof require !== "undefined") ? require("./astro-core.js") : root.AHS.core;
+  var SIGN_LORD = core.SIGN_LORD;
+  function rev(x) { x = x % 360; return x < 0 ? x + 360 : x; }
+
+  // D3 sign for a placement given its sign index and degrees within the sign.
+  function drekkanaSign(signIndex, degInSign) {
+    var o = Math.floor(degInSign / 10); // 0,1,2
+    if (o <= 0) return signIndex;
+    if (o === 1) return (signIndex + 4) % 12;  // 5th
+    return (signIndex + 8) % 12;                // 9th
+  }
+
+  // Continuous D9 (navamsa) sign for a sidereal longitude.
+  function navamsaSign(lon) {
+    return Math.floor(rev(lon) / (30 / 9)) % 12;
+  }
+
+  /*
+   * 22nd Drekkana from the Lagna.
+   * The Lagna occupies drekkana ordinal o (0,1,2) of its sign. The 22nd drekkana
+   * (counting the Lagna's drekkana as the 1st) advances 21 drekkanas = exactly 7
+   * signs, landing on the same ordinal in the 8th sign. Its lord is taken from the
+   * Drekkana (D3) sign of that position.
+   */
+  function drekkana22(ascSignIndex, ascDegInSign) {
+    var o = Math.floor(ascDegInSign / 10);
+    var rasi = (ascSignIndex + 7) % 12; // 8th sign from lagna
+    var d3 = drekkanaSign(rasi, o * 10 + 5); // sample mid-drekkana to get same ordinal mapping
+    return { rasiIndex: rasi, drekkanaSignIndex: d3, lord: SIGN_LORD[d3], ordinal: o + 1 };
+  }
+
+  /*
+   * 64th Navamsa from the Moon.
+   * Counting the Moon's navamsa as the 1st, the 64th advances 63 navamsas. Since
+   * navamsa signs run continuously, that is +63 = +3 (mod 12) navamsa signs,
+   * i.e. the 4th navamsa sign from the Moon's navamsa. Its lord is the maraka/
+   * Khara indicator.
+   */
+  function navamsa64(moonLon) {
+    var xm = navamsaSign(moonLon);
+    var navSign = (xm + 63) % 12; // == (xm + 3) % 12
+    return { moonNavamsaSignIndex: xm, navamsaSignIndex: navSign, lord: SIGN_LORD[navSign] };
+  }
+
+  /*
+   * Build a D3 Drekkana chart from a rasi chart (core.buildChart output).
+   * Returns D3 sign of each body, D3 lagna, and D3 whole-sign house of each body.
+   */
+  function buildD3(chart) {
+    var lagnaD3 = drekkanaSign(chart.ascendant.signIndex, chart.ascendant.degInSign);
+    var planets = {};
+    core.BODIES.forEach(function (p) {
+      var d = chart.planets[p];
+      var s = drekkanaSign(d.signIndex, d.degInSign);
+      planets[p] = {
+        signIndex: s,
+        sign: core.SIGNS[s],
+        house: ((s - lagnaD3 + 12) % 12) + 1
+      };
+    });
+    return { lagnaSignIndex: lagnaD3, lagnaSign: core.SIGNS[lagnaD3], planets: planets };
+  }
+
+  var api = {
+    drekkanaSign: drekkanaSign,
+    navamsaSign: navamsaSign,
+    drekkana22: drekkana22,
+    navamsa64: navamsa64,
+    buildD3: buildD3
+  };
+  root.AHS = root.AHS || {};
+  root.AHS.varga = api;
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+})(typeof window !== "undefined" ? window : globalThis);
+
+
+/* ===== js/dasha.js ===== */
+/*
+ * dasha.js
+ * Vimshottari Dasha calculation:
+ *   - Maha Dasha (MD), Antar Dasha (AD / bhukti), Pratyantar Dasha (PD)
+ *   - Starting dasha and balance from the Moon's nakshatra
+ *   - Current running MD / AD / PD as of a target date (default: now)
+ *
+ * Uses a 365.25-day year (standard in most Vedic software).
+ * Works in browser (window.AHS.dasha) and Node.
+ */
+(function (root) {
+  "use strict";
+
+  var core = (typeof require !== "undefined") ? require("./astro-core.js") : root.AHS.core;
+  var VIM_ORDER = core.VIM_ORDER;
+  var VIM_YEARS = core.VIM_YEARS;
+  var NAKSHATRAS = core.NAKSHATRAS;
+
+  var DAY_MS = 86400000;
+  var YEAR_DAYS = 365.25;
+  function rev(x) { x = x % 360; return x < 0 ? x + 360 : x; }
+  function jdToMs(jd) { return (jd - 2440587.5) * DAY_MS; }
+
+  // Build the nine sub-periods within a parent period (proportional Vimshottari).
+  function subPeriods(parentLord, parentStartMs, parentLenMs) {
+    var idx = VIM_ORDER.indexOf(parentLord);
+    var out = [];
+    var t = parentStartMs;
+    for (var i = 0; i < 9; i++) {
+      var lord = VIM_ORDER[(idx + i) % 9];
+      var len = parentLenMs * VIM_YEARS[lord] / 120;
+      out.push({ lord: lord, startMs: t, endMs: t + len });
+      t += len;
+    }
+    return out;
+  }
+
+  function find(periods, targetMs) {
+    for (var i = 0; i < periods.length; i++) {
+      if (targetMs >= periods[i].startMs && targetMs < periods[i].endMs) return periods[i];
+    }
+    return periods[periods.length - 1];
+  }
+
+  /*
+   * Compute current MD/AD/PD.
+   *   jdBirth  : Julian Day (UT) of birth
+   *   moonLon  : sidereal longitude of the Moon at birth (deg)
+   *   targetMs : ms-epoch of the moment to evaluate (default Date.now())
+   */
+  function compute(jdBirth, moonLon, targetMs) {
+    if (targetMs === undefined) targetMs = Date.now();
+    var span = 360 / 27;
+    var nakIdx = Math.floor(rev(moonLon) / span);
+    var startLord = NAKSHATRAS[nakIdx][1];
+    var posInNak = rev(moonLon) - nakIdx * span;
+    var frac = posInNak / span;            // fraction of nakshatra already traversed
+    var startIdx = VIM_ORDER.indexOf(startLord);
+
+    var birthMs = jdToMs(jdBirth);
+    var elapsedYears = frac * VIM_YEARS[startLord];
+    var firstMdStart = birthMs - elapsedYears * YEAR_DAYS * DAY_MS; // virtual MD start
+
+    // Build MDs spanning >120 years to safely contain the target.
+    var mds = [];
+    var t = firstMdStart;
+    for (var i = 0; i < 11; i++) {
+      var ml = VIM_ORDER[(startIdx + i) % 9];
+      var len = VIM_YEARS[ml] * YEAR_DAYS * DAY_MS;
+      mds.push({ lord: ml, startMs: t, endMs: t + len });
+      t += len;
+    }
+
+    var md = find(mds, targetMs);
+    var ads = subPeriods(md.lord, md.startMs, md.endMs - md.startMs);
+    var ad = find(ads, targetMs);
+    var pds = subPeriods(ad.lord, ad.startMs, ad.endMs - ad.startMs);
+    var pd = find(pds, targetMs);
+
+    // Balance of the starting dasha at birth (informational)
+    var balanceYears = (1 - frac) * VIM_YEARS[startLord];
+
+    return {
+      startLord: startLord,
+      startNakshatra: NAKSHATRAS[nakIdx][0],
+      balanceYears: balanceYears,
+      birthMs: birthMs,
+      targetMs: targetMs,
+      md: md, ad: ad, pd: pd,
+      mdSequence: mds,
+      adSequence: ads,
+      pdSequence: pds
+    };
+  }
+
+  function fmtDate(ms) {
+    var d = new Date(ms);
+    var mo = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return d.getUTCDate() + " " + mo[d.getUTCMonth()] + " " + d.getUTCFullYear();
+  }
+
+  var api = { compute: compute, subPeriods: subPeriods, fmtDate: fmtDate };
+  root.AHS = root.AHS || {};
+  root.AHS.dasha = api;
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+})(typeof window !== "undefined" ? window : globalThis);
+
+
+/* ===== js/predict.js ===== */
+/*
+ * predict.js
+ * Synthesises every layer of the analysis into a single forecast for the
+ * CURRENT Vimshottari period, then pinpoints the most vulnerable body part(s)
+ * and the most probable health issue(s).
+ *
+ * Inputs combined:
+ *   - Current Maha / Antar / Pratyantar dasha lords (timing & trigger)
+ *   - 64th Navamsa lord and 22nd Drekkana lord (Khara / maraka indicators)
+ *   - Natal placement, dignity and dusthana (6/8/12) involvement of each lord
+ *   - KP significator status for the disease houses (6/8/12)
+ *   - Karaka body parts (planet) + Kalapurusha body parts (sign occupied)
+ *
+ * Works in browser (window.AHS.predict) and Node.
+ */
+(function (root) {
+  "use strict";
+
+  var core = (typeof require !== "undefined") ? require("./astro-core.js") : root.AHS.core;
+  var data = (typeof require !== "undefined") ? require("./data.js") : root.AHS.data;
+  var kp = (typeof require !== "undefined") ? require("./kp.js") : root.AHS.kp;
+  var parashara = (typeof require !== "undefined") ? require("./parashara.js") : root.AHS.parashara;
+
+  function add(map, key, w) { map[key] = (map[key] || 0) + w; }
+  function topN(map, n) {
+    return Object.keys(map).map(function (k) { return { name: k, score: map[k] }; })
+      .sort(function (a, b) { return b.score - a.score; }).slice(0, n);
+  }
+
+  /*
+   * chart   : core.buildChart output
+   * dasha   : dasha.compute output (md/ad/pd)
+   * maraka  : { d22Lord, n64Lord }
+   */
+  function forecast(chart, dasha, maraka) {
+    var dusthana = [6, 8, 12];
+
+    // Contributing planets with base weights by role.
+    var roles = [
+      { planet: dasha.md.lord, role: "Maha Dasha lord", weight: 3.0 },
+      { planet: dasha.ad.lord, role: "Antar Dasha lord", weight: 2.2 },
+      { planet: dasha.pd.lord, role: "Pratyantar Dasha lord", weight: 1.6 },
+      { planet: maraka.n64Lord, role: "64th Navamsa lord (maraka)", weight: 2.0 },
+      { planet: maraka.d22Lord, role: "22nd Drekkana lord (maraka)", weight: 2.0 }
+    ];
+
+    // Merge duplicate planets, summing weights and collecting roles.
+    var byPlanet = {};
+    roles.forEach(function (r) {
+      if (!byPlanet[r.planet]) byPlanet[r.planet] = { planet: r.planet, weight: 0, roles: [], notes: [] };
+      byPlanet[r.planet].weight += r.weight;
+      byPlanet[r.planet].roles.push(r.role);
+    });
+
+    var bodyVotes = {};
+    var ailmentVotes = {};
+    var reasoning = [];
+    var riskScore = 0;
+
+    Object.keys(byPlanet).forEach(function (pname) {
+      var c = byPlanet[pname];
+      if (pname === "Rahu" || pname === "Ketu") {
+        // nodes have no body of their own sign-rulership; still carry ailments
+      }
+      var pl = chart.planets[pname];
+      var signIndex = pl ? pl.signIndex : null;
+      var w = c.weight;
+
+      // --- amplifiers ---
+      var amp = 1.0;
+      // KP: significator of disease houses 6/8/12?
+      var sig = kp.planetSignifications(chart, pname);
+      var disHouses = dusthana.filter(function (h) { return sig.all.indexOf(h) >= 0; });
+      if (disHouses.length) {
+        amp += 0.5;
+        c.notes.push("KP significator of disease house(s) " + disHouses.join(", "));
+        riskScore += 1.2 * c.roles.length;
+      }
+      // whole-sign dusthana placement
+      if (pl && dusthana.indexOf(pl.wholeSignHouse) >= 0) {
+        amp += 0.4;
+        c.notes.push("placed in dusthana house " + pl.wholeSignHouse);
+        riskScore += 1.0;
+      }
+      // dignity
+      var dig = pl ? parashara.dignityOf(pname, signIndex) : "neutral";
+      if (dig === "debilitated") { amp += 0.4; c.notes.push("debilitated in " + core.SIGNS[signIndex]); riskScore += 1.0; }
+      else if (dig === "exalted" || dig === "own sign") { amp -= 0.15; c.notes.push("dignified (" + dig + "), partly protective"); }
+      // maraka convergence (lord serves a dasha role AND a maraka role)
+      var isDashaRole = c.roles.some(function (r) { return /Dasha/.test(r); });
+      var isMarakaRole = c.roles.some(function (r) { return /maraka/.test(r); });
+      if (isDashaRole && isMarakaRole) {
+        amp += 0.6;
+        c.notes.push("running-period lord coincides with a maraka point \u2014 heightened sensitivity");
+        riskScore += 2.0;
+      }
+
+      c.effectiveWeight = w * amp;
+
+      // --- distribute to body parts & ailments ---
+      // Planetary karaka body parts lead (organ-specific); the occupied sign's
+      // Kalapurusha parts are secondary (general bodily region).
+      var parts = (data.PLANET_BODY[pname] || []);
+      parts.forEach(function (b, i) {
+        var f = i === 0 ? 1.4 : i < 3 ? 1.0 : 0.5;
+        add(bodyVotes, b, c.effectiveWeight * f);
+      });
+      if (signIndex !== null) {
+        (data.SIGN_BODY[signIndex] || []).forEach(function (b) { add(bodyVotes, b, c.effectiveWeight * 0.5); });
+      }
+      (data.PLANET_AILMENTS[pname] || []).forEach(function (a, i) { add(ailmentVotes, a, c.effectiveWeight * (i < 3 ? 1 : 0.5)); });
+    });
+
+    // Build contributor list (sorted by effective weight)
+    var contributors = Object.keys(byPlanet).map(function (k) { return byPlanet[k]; })
+      .sort(function (a, b) { return b.effectiveWeight - a.effectiveWeight; });
+
+    var weakestParts = topN(bodyVotes, 4);
+    var probableIssues = topN(ailmentVotes, 4);
+
+    // Risk band
+    var riskLevel, riskClass;
+    if (riskScore >= 6) { riskLevel = "Elevated"; riskClass = "high"; }
+    else if (riskScore >= 3) { riskLevel = "Moderate"; riskClass = "moderate"; }
+    else { riskLevel = "Lower"; riskClass = "low"; }
+
+    // Reasoning narrative
+    reasoning.push("Current period: " + dasha.md.lord + " Maha Dasha \u2192 " +
+      dasha.ad.lord + " Antar Dasha \u2192 " + dasha.pd.lord + " Pratyantar Dasha.");
+    contributors.slice(0, 3).forEach(function (c) {
+      var pl = chart.planets[c.planet];
+      reasoning.push(c.planet + " (" + c.roles.join("; ") + ")" +
+        (pl ? " in " + pl.sign + ", house " + pl.wholeSignHouse : "") +
+        (c.notes.length ? " \u2014 " + c.notes.join("; ") : "") + ".");
+    });
+
+    var primary = weakestParts[0] ? weakestParts[0].name : "general vitality";
+    var primaryIssue = probableIssues[0] ? probableIssues[0].name : "general low energy";
+
+    var verdict = "During the current " + dasha.md.lord + "\u2013" + dasha.ad.lord + "\u2013" +
+      dasha.pd.lord + " period, the body area most likely to need attention is the " +
+      "<strong>" + primary + "</strong>" +
+      (weakestParts[1] ? " (also: " + weakestParts[1].name + ")" : "") +
+      ", with the most probable concern being <strong>" + primaryIssue + "</strong>. " +
+      "Overall health risk for this period reads as <strong>" + riskLevel + "</strong>.";
+
+    return {
+      period: {
+        md: dasha.md, ad: dasha.ad, pd: dasha.pd,
+        label: dasha.md.lord + " / " + dasha.ad.lord + " / " + dasha.pd.lord
+      },
+      riskLevel: riskLevel,
+      riskClass: riskClass,
+      riskScore: Math.round(riskScore * 10) / 10,
+      weakestParts: weakestParts,
+      probableIssues: probableIssues,
+      contributors: contributors,
+      reasoning: reasoning,
+      verdict: verdict
+    };
+  }
+
+  var api = { forecast: forecast };
+  root.AHS = root.AHS || {};
+  root.AHS.predict = api;
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+})(typeof window !== "undefined" ? window : globalThis);
+
+
 /* ===== js/app.js ===== */
 /*
  * app.js -- UI wiring for the Astrological Health Screener.
@@ -1491,6 +1933,9 @@ button.ghost { background: transparent; }
   var data = window.AHS.data;
   var parashara = window.AHS.parashara;
   var kp = window.AHS.kp;
+  var varga = window.AHS.varga;
+  var dasha = window.AHS.dasha;
+  var predict = window.AHS.predict;
 
   var $ = function (id) { return document.getElementById(id); };
   function el(tag, cls, html) {
@@ -1726,6 +2171,94 @@ button.ghost { background: transparent; }
   }
 
   /* ----------------- Orchestration ----------------- */
+  function renderDasha(dz) {
+    var tbody = $("dasha-table").querySelector("tbody");
+    tbody.innerHTML = "";
+    var rows = [
+      ["Maha Dasha", dz.md],
+      ["Antar Dasha", dz.ad],
+      ["Pratyantar Dasha", dz.pd]
+    ];
+    rows.forEach(function (r) {
+      tbody.appendChild(el("tr", null,
+        "<td>" + r[0] + "</td><td><strong>" + r[1].lord + "</strong></td><td>" +
+        dasha.fmtDate(r[1].startMs) + "</td><td>" + dasha.fmtDate(r[1].endMs) + "</td>"));
+    });
+    $("dasha-meta").textContent = "Birth star " + dz.startNakshatra + " (" + dz.startLord +
+      "), balance " + dz.balanceYears.toFixed(2) + " yrs at birth";
+  }
+
+  function renderDivisional(natal, d22, n64, f) {
+    var m = $("maraka-out");
+    m.innerHTML = "";
+    m.appendChild(el("p", null,
+      "<strong>22nd Drekkana lord (from Lagna):</strong> " +
+      (f.unknownTime ? "<span class='hint'>needs birth time</span>" :
+        "<span class='period-pill'>" + d22.lord + "</span> &mdash; in " + core.SIGNS[d22.drekkanaSignIndex] +
+        " (8th-sign Drekkana, " + core.SIGNS[d22.rasiIndex] + "). A classical cause-of-affliction (Khara) point.")));
+    m.appendChild(el("p", null,
+      "<strong>64th Navamsa lord (from Moon):</strong> <span class='period-pill'>" + n64.lord +
+      "</span> &mdash; navamsa sign " + core.SIGNS[n64.navamsaSignIndex] +
+      ". Another Khara/maraka point governing vulnerable areas."));
+
+    var d3 = varga.buildD3(natal);
+    $("d3-asc").textContent = "D3 Lagna: " + d3.lagnaSign + (f.unknownTime ? " (approx \u2014 time unknown)" : "");
+    var tbody = $("d3-table").querySelector("tbody");
+    tbody.innerHTML = "";
+    core.BODIES.forEach(function (p) {
+      tbody.appendChild(el("tr", null,
+        "<td>" + p + "</td><td>" + d3.planets[p].sign + "</td><td>" +
+        (f.unknownTime ? "&mdash;" : d3.planets[p].house) + "</td>"));
+    });
+  }
+
+  function renderForecastHighlight(fc) {
+    var c = $("forecast-highlight");
+    c.hidden = false;
+    var parts = fc.weakestParts.slice(0, 3).map(function (w) {
+      return "<span class='focus-chip'>" + w.name + "</span>";
+    }).join("");
+    var issues = fc.probableIssues.slice(0, 3).map(function (w) {
+      return "<span class='issue-chip'>" + w.name + "</span>";
+    }).join("");
+    c.innerHTML =
+      "<h3>&#127919; Period Health Focus</h3>" +
+      "<p>" + fc.verdict + "</p>" +
+      "<div class='focus-parts'><strong>Most vulnerable area(s):</strong><br>" + parts + "</div>" +
+      "<div class='focus-parts'><strong>Most probable issue(s):</strong><br>" + issues + "</div>";
+  }
+
+  function renderForecast(fc) {
+    var c = $("forecast-out");
+    c.innerHTML = "<h3>Period Health Forecast</h3>";
+    c.appendChild(el("p", null,
+      "Running period: " +
+      "<span class='period-pill'>" + fc.period.md.lord + " Maha</span>" +
+      "<span class='period-pill'>" + fc.period.ad.lord + " Antar</span>" +
+      "<span class='period-pill'>" + fc.period.pd.lord + " Pratyantar</span>"));
+
+    var box = el("div", "finding " + fc.riskClass);
+    box.appendChild(el("h4", null, "Synthesis &amp; verdict <span class='sev-tag " + fc.riskClass + "'>" + fc.riskLevel + " risk</span>"));
+    box.appendChild(el("p", null, fc.verdict));
+    var ul = el("ul");
+    fc.reasoning.forEach(function (r) { ul.appendChild(el("li", null, r)); });
+    box.appendChild(ul);
+    c.appendChild(box);
+
+    c.appendChild(el("h4", null, "Contributing factors"));
+    fc.contributors.forEach(function (ct) {
+      var div = el("div", "finding low");
+      div.appendChild(el("h4", null, ct.planet + " <span class='hint'>(" + ct.roles.join("; ") + ")</span>"));
+      if (ct.notes.length) div.appendChild(el("p", null, ct.notes.join("; ") + "."));
+      c.appendChild(div);
+    });
+
+    var bp = el("div", "bodyparts");
+    bp.appendChild(el("span", null, "<strong>Weakest body areas (weighted):</strong> "));
+    fc.weakestParts.forEach(function (w) { bp.appendChild(el("span", "chip", w.name)); });
+    c.appendChild(bp);
+  }
+
   function run(e) {
     if (e) e.preventDefault();
     var err = $("form-error");
@@ -1737,6 +2270,12 @@ button.ghost { background: transparent; }
       var parRes = parashara.analyze(natal);
       var kpRes = kp.analyze(natal);
 
+      // Dasha + divisionals + forecast
+      var dz = dasha.compute(natal.jd, natal.planets.Moon.lon);
+      var n64 = varga.navamsa64(natal.planets.Moon.lon);
+      var d22 = varga.drekkana22(natal.ascendant.signIndex, natal.ascendant.degInSign);
+      var fc = null;
+
       $("overview-meta").textContent =
         (f.name ? f.name + " \u2014 " : "") +
         f.d + "/" + f.mo + "/" + f.y + " at " + pad(f.h) + ":" + pad(f.mi) +
@@ -1747,13 +2286,24 @@ button.ghost { background: transparent; }
 
       renderNatalTable(natal, f);
       renderTransits(transit, natal, f);
+      renderDasha(dz);
+      renderDivisional(natal, d22, n64, f);
 
       if (f.unknownTime) {
         $("parashara-out").innerHTML = "<h3>Parashara Health Analysis</h3><p class='hint'>House-based analysis needs a birth time. Enter the time of birth to enable the full Parashara &amp; KP screening. Planetary sign/nakshatra placements above are still valid.</p>";
         $("kp-out").innerHTML = "<h3>KP Health Analysis</h3><p class='hint'>KP relies on house cusps, which require an accurate birth time.</p>";
+        $("risk-level").textContent = "n/a*";
+        $("forecast-highlight").hidden = true;
+        $("forecast-out").innerHTML = "<h3>Period Health Forecast</h3><p class='hint'>The pinpointed forecast needs a birth time (it uses houses and the 22nd-Drekkana point). The Dasha timeline and 64th-Navamsa point above are still shown.</p>";
       } else {
         renderParashara(parRes);
         renderKP(kpRes);
+        fc = predict.forecast(natal, dz, { d22Lord: d22.lord, n64Lord: n64.lord });
+        var rl = $("risk-level");
+        rl.textContent = fc.riskLevel;
+        rl.className = "score-value risk-" + fc.riskClass;
+        renderForecastHighlight(fc);
+        renderForecast(fc);
       }
 
       $("results").hidden = false;

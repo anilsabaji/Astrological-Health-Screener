@@ -22,6 +22,12 @@ sidereal (Vedic) birth chart plus the current planetary transits, and produces a
 - **Nakshatra, pada and KP sub-lord** for every body and cusp.
 - **Live transits (Gochara)** mapped through your natal houses, with Sade Sati and
   malefic-transit health flags.
+- **Vimshottari Dasha** — current Maha / Antar / Pratyantar periods with dates.
+- **Divisionals & maraka points** — D3 Drekkana chart, the **22nd Drekkana lord**
+  (from Lagna) and the **64th Navamsa lord** (from Moon).
+- **Period Health Forecast** — synthesises dasha lords + maraka points + KP
+  significators + dignities to **pinpoint the most vulnerable body part and the
+  most probable health issue** for the current period, with a risk rating.
 - City search (via the free Open-Meteo geocoding API) or manual latitude / longitude /
   UTC-offset entry.
 - Two independent, rule-based analyses with a vitality/health index and body systems
@@ -55,6 +61,10 @@ js/
                       house meanings, dignities, KP house groups)
   parashara.js        Parashara health analysis engine
   kp.js               KP health analysis engine
+  varga.js            divisional charts: D3 Drekkana, D9 navamsa,
+                      22nd Drekkana lord, 64th Navamsa lord
+  dasha.js            Vimshottari Maha/Antar/Pratyantar dasha + current periods
+  predict.js          synthesis -> pinpoints weakest body part & probable issue
   app.js              UI wiring (geocoding, rendering, orchestration)
 ```
 

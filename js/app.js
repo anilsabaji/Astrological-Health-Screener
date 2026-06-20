@@ -9,6 +9,9 @@
   var data = window.AHS.data;
   var parashara = window.AHS.parashara;
   var kp = window.AHS.kp;
+  var varga = window.AHS.varga;
+  var dasha = window.AHS.dasha;
+  var predict = window.AHS.predict;
 
   var $ = function (id) { return document.getElementById(id); };
   function el(tag, cls, html) {
@@ -244,6 +247,94 @@
   }
 
   /* ----------------- Orchestration ----------------- */
+  function renderDasha(dz) {
+    var tbody = $("dasha-table").querySelector("tbody");
+    tbody.innerHTML = "";
+    var rows = [
+      ["Maha Dasha", dz.md],
+      ["Antar Dasha", dz.ad],
+      ["Pratyantar Dasha", dz.pd]
+    ];
+    rows.forEach(function (r) {
+      tbody.appendChild(el("tr", null,
+        "<td>" + r[0] + "</td><td><strong>" + r[1].lord + "</strong></td><td>" +
+        dasha.fmtDate(r[1].startMs) + "</td><td>" + dasha.fmtDate(r[1].endMs) + "</td>"));
+    });
+    $("dasha-meta").textContent = "Birth star " + dz.startNakshatra + " (" + dz.startLord +
+      "), balance " + dz.balanceYears.toFixed(2) + " yrs at birth";
+  }
+
+  function renderDivisional(natal, d22, n64, f) {
+    var m = $("maraka-out");
+    m.innerHTML = "";
+    m.appendChild(el("p", null,
+      "<strong>22nd Drekkana lord (from Lagna):</strong> " +
+      (f.unknownTime ? "<span class='hint'>needs birth time</span>" :
+        "<span class='period-pill'>" + d22.lord + "</span> &mdash; in " + core.SIGNS[d22.drekkanaSignIndex] +
+        " (8th-sign Drekkana, " + core.SIGNS[d22.rasiIndex] + "). A classical cause-of-affliction (Khara) point.")));
+    m.appendChild(el("p", null,
+      "<strong>64th Navamsa lord (from Moon):</strong> <span class='period-pill'>" + n64.lord +
+      "</span> &mdash; navamsa sign " + core.SIGNS[n64.navamsaSignIndex] +
+      ". Another Khara/maraka point governing vulnerable areas."));
+
+    var d3 = varga.buildD3(natal);
+    $("d3-asc").textContent = "D3 Lagna: " + d3.lagnaSign + (f.unknownTime ? " (approx \u2014 time unknown)" : "");
+    var tbody = $("d3-table").querySelector("tbody");
+    tbody.innerHTML = "";
+    core.BODIES.forEach(function (p) {
+      tbody.appendChild(el("tr", null,
+        "<td>" + p + "</td><td>" + d3.planets[p].sign + "</td><td>" +
+        (f.unknownTime ? "&mdash;" : d3.planets[p].house) + "</td>"));
+    });
+  }
+
+  function renderForecastHighlight(fc) {
+    var c = $("forecast-highlight");
+    c.hidden = false;
+    var parts = fc.weakestParts.slice(0, 3).map(function (w) {
+      return "<span class='focus-chip'>" + w.name + "</span>";
+    }).join("");
+    var issues = fc.probableIssues.slice(0, 3).map(function (w) {
+      return "<span class='issue-chip'>" + w.name + "</span>";
+    }).join("");
+    c.innerHTML =
+      "<h3>&#127919; Period Health Focus</h3>" +
+      "<p>" + fc.verdict + "</p>" +
+      "<div class='focus-parts'><strong>Most vulnerable area(s):</strong><br>" + parts + "</div>" +
+      "<div class='focus-parts'><strong>Most probable issue(s):</strong><br>" + issues + "</div>";
+  }
+
+  function renderForecast(fc) {
+    var c = $("forecast-out");
+    c.innerHTML = "<h3>Period Health Forecast</h3>";
+    c.appendChild(el("p", null,
+      "Running period: " +
+      "<span class='period-pill'>" + fc.period.md.lord + " Maha</span>" +
+      "<span class='period-pill'>" + fc.period.ad.lord + " Antar</span>" +
+      "<span class='period-pill'>" + fc.period.pd.lord + " Pratyantar</span>"));
+
+    var box = el("div", "finding " + fc.riskClass);
+    box.appendChild(el("h4", null, "Synthesis &amp; verdict <span class='sev-tag " + fc.riskClass + "'>" + fc.riskLevel + " risk</span>"));
+    box.appendChild(el("p", null, fc.verdict));
+    var ul = el("ul");
+    fc.reasoning.forEach(function (r) { ul.appendChild(el("li", null, r)); });
+    box.appendChild(ul);
+    c.appendChild(box);
+
+    c.appendChild(el("h4", null, "Contributing factors"));
+    fc.contributors.forEach(function (ct) {
+      var div = el("div", "finding low");
+      div.appendChild(el("h4", null, ct.planet + " <span class='hint'>(" + ct.roles.join("; ") + ")</span>"));
+      if (ct.notes.length) div.appendChild(el("p", null, ct.notes.join("; ") + "."));
+      c.appendChild(div);
+    });
+
+    var bp = el("div", "bodyparts");
+    bp.appendChild(el("span", null, "<strong>Weakest body areas (weighted):</strong> "));
+    fc.weakestParts.forEach(function (w) { bp.appendChild(el("span", "chip", w.name)); });
+    c.appendChild(bp);
+  }
+
   function run(e) {
     if (e) e.preventDefault();
     var err = $("form-error");
@@ -255,6 +346,12 @@
       var parRes = parashara.analyze(natal);
       var kpRes = kp.analyze(natal);
 
+      // Dasha + divisionals + forecast
+      var dz = dasha.compute(natal.jd, natal.planets.Moon.lon);
+      var n64 = varga.navamsa64(natal.planets.Moon.lon);
+      var d22 = varga.drekkana22(natal.ascendant.signIndex, natal.ascendant.degInSign);
+      var fc = null;
+
       $("overview-meta").textContent =
         (f.name ? f.name + " \u2014 " : "") +
         f.d + "/" + f.mo + "/" + f.y + " at " + pad(f.h) + ":" + pad(f.mi) +
@@ -265,13 +362,24 @@
 
       renderNatalTable(natal, f);
       renderTransits(transit, natal, f);
+      renderDasha(dz);
+      renderDivisional(natal, d22, n64, f);
 
       if (f.unknownTime) {
         $("parashara-out").innerHTML = "<h3>Parashara Health Analysis</h3><p class='hint'>House-based analysis needs a birth time. Enter the time of birth to enable the full Parashara &amp; KP screening. Planetary sign/nakshatra placements above are still valid.</p>";
         $("kp-out").innerHTML = "<h3>KP Health Analysis</h3><p class='hint'>KP relies on house cusps, which require an accurate birth time.</p>";
+        $("risk-level").textContent = "n/a*";
+        $("forecast-highlight").hidden = true;
+        $("forecast-out").innerHTML = "<h3>Period Health Forecast</h3><p class='hint'>The pinpointed forecast needs a birth time (it uses houses and the 22nd-Drekkana point). The Dasha timeline and 64th-Navamsa point above are still shown.</p>";
       } else {
         renderParashara(parRes);
         renderKP(kpRes);
+        fc = predict.forecast(natal, dz, { d22Lord: d22.lord, n64Lord: n64.lord });
+        var rl = $("risk-level");
+        rl.textContent = fc.riskLevel;
+        rl.className = "score-value risk-" + fc.riskClass;
+        renderForecastHighlight(fc);
+        renderForecast(fc);
       }
 
       $("results").hidden = false;

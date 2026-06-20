@@ -104,7 +104,12 @@
             <span class="score-label">KP health index</span>
             <span class="score-value" id="kp-score">--</span>
           </div>
+          <div class="score-box risk">
+            <span class="score-label">Current-period risk</span>
+            <span class="score-value" id="risk-level">--</span>
+          </div>
         </div>
+        <div id="forecast-highlight" class="forecast-highlight" hidden></div>
       </div>
 
       <nav class="tabs" id="tabs">
@@ -112,6 +117,8 @@
         <button class="tab" data-tab="transits">Current Transits</button>
         <button class="tab" data-tab="parashara">Parashara Analysis</button>
         <button class="tab" data-tab="kp">KP Analysis</button>
+        <button class="tab" data-tab="dasha">Dasha &amp; Forecast</button>
+        <button class="tab" data-tab="divisional">Divisionals (D3)</button>
       </nav>
 
       <div class="tab-panel active" id="tab-chart">
@@ -153,6 +160,41 @@
         <div class="card" id="kp-out"></div>
       </div>
 
+      <div class="tab-panel" id="tab-dasha">
+        <div class="card">
+          <h3>Vimshottari Dasha <span class="sub" id="dasha-meta"></span></h3>
+          <div class="table-scroll">
+            <table class="data-table" id="dasha-table">
+              <thead>
+                <tr><th>Level</th><th>Lord</th><th>From</th><th>To</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="hint">Running Maha &middot; Antar &middot; Pratyantar periods as of today (365.25-day year).</p>
+        </div>
+        <div class="card" id="forecast-out"></div>
+      </div>
+
+      <div class="tab-panel" id="tab-divisional">
+        <div class="card">
+          <h3>Longevity / Maraka points</h3>
+          <div id="maraka-out"></div>
+        </div>
+        <div class="card">
+          <h3>D3 Drekkana Chart <span class="sub" id="d3-asc"></span></h3>
+          <div class="table-scroll">
+            <table class="data-table" id="d3-table">
+              <thead>
+                <tr><th>Body</th><th>D3 Sign</th><th>D3 House</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="hint">Drekkana (D3): each sign split into three 10&deg; parts (1st = same sign, 2nd = 5th sign, 3rd = 9th sign). Used here for constitution/longevity context.</p>
+        </div>
+      </div>
+
       <div class="card disclaimer-foot">
         <h3>Methodology &amp; Limitations</h3>
         <ul>
@@ -177,6 +219,9 @@
   <script src="js/data.js"></script>
   <script src="js/parashara.js"></script>
   <script src="js/kp.js"></script>
+  <script src="js/varga.js"></script>
+  <script src="js/dasha.js"></script>
+  <script src="js/predict.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
