@@ -22,7 +22,9 @@ sidereal (Vedic) birth chart plus the current planetary transits, and produces a
 - **Nakshatra, pada and KP sub-lord** for every body and cusp.
 - **Live transits (Gochara)** mapped through your natal houses, with Sade Sati and
   malefic-transit health flags.
-- **Vimshottari Dasha** — current Maha / Antar / Pratyantar periods with dates.
+- **Vimshottari Dasha** — current Maha / Antar / Pratyantar periods with dates,
+  analysed for health both classically and **the KP way** (a dasha lord delivers
+  the houses it signifies via its star lord; 6/8/12 = adverse, 1/5/11 = recovery).
 - **Divisionals & maraka points** — D3 Drekkana chart, the **22nd Drekkana lord**
   (from Lagna) and the **64th Navamsa lord** (from Moon).
 - **D6 Shashthamsa health chart** — the divisional dedicated to health & disease,
@@ -71,6 +73,7 @@ js/
   varga.js            divisional charts: D3 Drekkana, D6 Shashthamsa, D9 navamsa,
                       22nd Drekkana lord, 64th Navamsa lord
   dasha.js            Vimshottari Maha/Antar/Pratyantar dasha + current periods
+  kp-dasha.js         KP analysis of the running dasha for health (significators)
   d6.js               D6 Shashthamsa (health/disease) chart analysis
   health-topics.js    health-question knowledge base + keyword classifier
   qa.js               natural-language question engine (likelihood, organ, timing)

@@ -15,6 +15,7 @@
   var d6engine = window.AHS.d6;
   var qa = window.AHS.qa;
   var topics = window.AHS.topics;
+  var kpdasha = window.AHS.kpdasha;
 
   var qaContext = null; // populated after a screening is generated
   var logoDataUrl = null; // letterhead logo, read client-side
@@ -342,6 +343,40 @@
     }
   }
 
+  function renderKPDasha(r) {
+    var c = $("kpdasha-out");
+    c.innerHTML = "<h3>KP Dasha Health Analysis</h3>";
+    c.appendChild(el("div", "summary-box", r.summary));
+
+    var jb = el("div", "finding " + r.jointClass);
+    jb.appendChild(el("h4", null, "Running-period verdict (KP) <span class='sev-tag " + r.jointClass + "'>" +
+      (r.jointClass === "high" ? "sensitive" : r.jointClass === "moderate" ? "guarded" : "favourable") + "</span>"));
+    jb.appendChild(el("p", null, r.jointVerdict));
+    if (r.bodyParts.length) {
+      var bpj = el("div", "bodyparts");
+      bpj.appendChild(el("span", null, "<strong>Areas implicated:</strong> "));
+      r.bodyParts.forEach(function (b) { bpj.appendChild(el("span", "chip", b.name)); });
+      jb.appendChild(bpj);
+    }
+    c.appendChild(jb);
+
+    r.levels.forEach(function (l) {
+      var div = el("div", "finding " + l.klass);
+      div.appendChild(el("h4", null, l.level + ": " + l.lord +
+        " <span class='hint'>(in star of " + l.starLord + ")</span>"));
+      div.appendChild(el("p", null,
+        "Signifies houses [" + l.signifies.join(", ") + "]" +
+        (l.primary.length ? " &middot; primary via star lord: [" + l.primary.join(", ") + "]" : "") +
+        "<br>" + l.verdict));
+      if (l.bodyParts.length) {
+        var b = el("div", "bodyparts");
+        l.bodyParts.forEach(function (x) { b.appendChild(el("span", "chip", x)); });
+        div.appendChild(b);
+      }
+      c.appendChild(div);
+    });
+  }
+
   function renderForecast(fc) {
     var c = $("forecast-out");
     c.innerHTML = "<h3>Period Health Forecast</h3>";
@@ -584,6 +619,7 @@
         $("d6-score").textContent = "n/a*";
         $("forecast-highlight").hidden = true;
         $("forecast-out").innerHTML = "<h3>Period Health Forecast</h3><p class='hint'>The pinpointed forecast needs a birth time (it uses houses and the 22nd-Drekkana point). The Dasha timeline and 64th-Navamsa point above are still shown.</p>";
+        $("kpdasha-out").innerHTML = "<h3>KP Dasha Health Analysis</h3><p class='hint'>KP dasha analysis relies on house significators, which need an accurate birth time.</p>";
       } else {
         renderParashara(parRes);
         renderKP(kpRes);
@@ -594,6 +630,7 @@
         rl.className = "score-value risk-" + fc.riskClass;
         renderForecastHighlight(fc);
         renderForecast(fc);
+        renderKPDasha(kpdasha.analyze(natal, dz));
       }
 
       // Enable the Ask-a-Question module with a ready context.
