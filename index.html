@@ -4,7 +4,179 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Astrological Health Screener &middot; Parashara &amp; KP</title>
-  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+:root {
+  --bg: #0e1020;
+  --bg-2: #161a33;
+  --card: #1c2142;
+  --card-2: #232a52;
+  --line: #313a6b;
+  --text: #e9ecf8;
+  --muted: #9aa3cf;
+  --gold: #f2c46d;
+  --gold-2: #e0a83c;
+  --indigo: #7c83f7;
+  --green: #57c98a;
+  --amber: #e8b84b;
+  --red: #ef6a6a;
+  --shadow: 0 8px 30px rgba(0,0,0,.35);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: radial-gradient(1200px 600px at 70% -10%, #20264f 0%, var(--bg) 55%) fixed;
+  color: var(--text);
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.55;
+}
+.wrap { max-width: 1000px; margin: 0 auto; padding: 0 18px; }
+
+/* Header */
+.site-header { padding: 34px 0 22px; text-align: center; }
+.site-header h1 { margin: 0; font-size: 2rem; letter-spacing: .5px; color: var(--gold); }
+.tagline { margin: 8px 0 0; color: var(--muted); }
+.tagline strong { color: var(--indigo); }
+
+.disclaimer-banner {
+  background: rgba(239,106,106,.12);
+  border-top: 1px solid rgba(239,106,106,.35);
+  border-bottom: 1px solid rgba(239,106,106,.35);
+  font-size: .9rem;
+  padding: 12px 0;
+}
+.disclaimer-banner strong { color: var(--red); }
+
+main.wrap { padding-top: 26px; padding-bottom: 60px; }
+
+/* Cards */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 22px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+.card h2 { margin-top: 0; color: var(--gold); }
+.card h3 { margin-top: 0; }
+hr { border: none; border-top: 1px solid var(--line); margin: 20px 0; }
+
+/* Form */
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.field { display: flex; flex-direction: column; }
+.field-wide { grid-column: 1 / -1; }
+label { font-size: .85rem; color: var(--muted); margin-bottom: 6px; }
+.opt { color: #6b73a0; font-weight: normal; }
+input[type="text"], input[type="number"], input[type="date"], input[type="time"] {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--text);
+  padding: 10px 12px;
+  font-size: .95rem;
+}
+input:focus { outline: 2px solid var(--indigo); border-color: var(--indigo); }
+.hint { font-size: .78rem; color: var(--muted); margin: 6px 0 0; }
+
+.city-search { display: flex; gap: 8px; }
+.city-search input { flex: 1; }
+.city-results {
+  list-style: none; margin: 8px 0 0; padding: 0;
+  border: 1px solid var(--line); border-radius: 9px; overflow: hidden;
+  background: var(--bg-2);
+}
+.city-results li { padding: 9px 12px; cursor: pointer; border-bottom: 1px solid var(--line); }
+.city-results li:last-child { border-bottom: none; }
+.city-results li:hover { background: var(--card-2); }
+
+.actions { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
+button {
+  font: inherit; cursor: pointer; border-radius: 9px; padding: 11px 18px; border: 1px solid var(--line);
+  background: var(--card-2); color: var(--text); transition: .15s;
+}
+button:hover { border-color: var(--indigo); }
+button.primary { background: linear-gradient(180deg, var(--gold) 0%, var(--gold-2) 100%); color: #2a2305; border: none; font-weight: 700; }
+button.primary:hover { filter: brightness(1.06); }
+button.ghost { background: transparent; }
+.error { color: var(--red); margin-top: 12px; }
+
+/* Overview / scores */
+.meta { color: var(--muted); margin-top: 0; }
+.score-row { display: flex; gap: 16px; flex-wrap: wrap; }
+.score-box {
+  flex: 1; min-width: 200px; border-radius: 12px; padding: 16px 18px; text-align: center;
+  border: 1px solid var(--line); background: var(--card-2);
+}
+.score-box.parashara { border-color: rgba(124,131,247,.5); }
+.score-box.kp { border-color: rgba(242,196,109,.5); }
+.score-label { display: block; color: var(--muted); font-size: .82rem; }
+.score-value { display: block; font-size: 2.4rem; font-weight: 800; margin-top: 4px; }
+
+/* Tabs */
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+.tab {
+  background: transparent; border: 1px solid var(--line); color: var(--muted);
+  padding: 9px 16px; border-radius: 999px;
+}
+.tab.active { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* Tables */
+.table-scroll { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.data-table th, .data-table td { padding: 9px 10px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.data-table th { color: var(--gold); font-weight: 600; }
+.data-table tbody tr:hover { background: var(--card-2); }
+.sub { font-size: .85rem; color: var(--muted); font-weight: normal; margin-left: 8px; }
+
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .72rem; font-weight: 700; }
+.badge.exalted { background: rgba(87,201,138,.2); color: var(--green); }
+.badge.debilitated { background: rgba(239,106,106,.2); color: var(--red); }
+.badge.own { background: rgba(242,196,109,.2); color: var(--gold); }
+.badge.neutral { background: rgba(154,163,207,.15); color: var(--muted); }
+
+/* Findings */
+.finding {
+  border-left: 4px solid var(--line); background: var(--card-2);
+  border-radius: 0 10px 10px 0; padding: 12px 16px; margin: 12px 0;
+}
+.finding.high { border-left-color: var(--red); }
+.finding.moderate { border-left-color: var(--amber); }
+.finding.low { border-left-color: var(--indigo); }
+.finding h4 { margin: 0 0 6px; display: flex; align-items: center; gap: 10px; }
+.sev-tag { font-size: .68rem; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .5px; }
+.sev-tag.high { background: rgba(239,106,106,.2); color: var(--red); }
+.sev-tag.moderate { background: rgba(232,184,75,.2); color: var(--amber); }
+.sev-tag.low { background: rgba(124,131,247,.2); color: var(--indigo); }
+.bodyparts { margin-top: 8px; }
+.bodyparts .chip {
+  display: inline-block; background: var(--bg-2); border: 1px solid var(--line);
+  border-radius: 999px; padding: 3px 10px; font-size: .76rem; margin: 3px 4px 0 0; color: var(--muted);
+}
+.supportive { border-left-color: var(--green); }
+.supportive li { margin: 6px 0; }
+
+.summary-box { background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+
+.flag {
+  display: inline-block; margin: 6px 8px 0 0; padding: 6px 12px; border-radius: 8px;
+  background: rgba(232,184,75,.15); border: 1px solid rgba(232,184,75,.4); color: var(--amber); font-size: .85rem;
+}
+
+.disclaimer-foot { background: var(--bg-2); }
+.disclaimer-foot ul { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: .88rem; }
+.disclaimer-foot li { margin: 6px 0; }
+
+.site-footer { border-top: 1px solid var(--line); padding: 20px 0; color: var(--muted); font-size: .82rem; text-align: center; }
+
+@media (max-width: 680px) {
+  .grid { grid-template-columns: 1fr; }
+  .site-header h1 { font-size: 1.55rem; }
+}
+
+  </style>
 </head>
 <body>
   <header class="site-header">
@@ -170,12 +342,1460 @@
     </div>
   </footer>
 
-  <!-- Engine scripts (order matters) -->
-  <script src="js/ephemeris.js"></script>
-  <script src="js/astro-core.js"></script>
-  <script src="js/data.js"></script>
-  <script src="js/parashara.js"></script>
-  <script src="js/kp.js"></script>
-  <script src="js/app.js"></script>
+  <!-- All engine + UI code inlined for standalone deployment -->
+  <script>
+/* ===== js/ephemeris.js ===== */
+/*
+ * ephemeris.js
+ * Geocentric ecliptic longitudes (TROPICAL) for Sun, Moon, Mercury..Saturn and
+ * the lunar nodes (Rahu/Ketu), using Paul Schlyter's compact orbital-element
+ * method with the major perturbation terms for the Moon, Jupiter and Saturn.
+ *
+ * Accuracy: ~1-2 arc minutes for Sun/Moon and inner planets, a few arc minutes
+ * for Jupiter/Saturn -- more than enough to determine rasi (sign), nakshatra and
+ * KP sub-divisions reliably.
+ *
+ * Reference method: Paul Schlyter, "Computing planetary positions"
+ * (https://stjarnhimlen.se/comp/ppcomp.html). Algorithm re-implemented here;
+ * no source text reproduced.
+ *
+ * Works in the browser (attaches to window.AHS) and in Node (module.exports).
+ */
+(function (root) {
+  "use strict";
+
+  var DEG = Math.PI / 180;
+  var RAD = 180 / Math.PI;
+
+  function rev(x) { // normalize to 0..360
+    x = x % 360;
+    return x < 0 ? x + 360 : x;
+  }
+  function sind(x) { return Math.sin(x * DEG); }
+  function cosd(x) { return Math.cos(x * DEG); }
+  function tand(x) { return Math.tan(x * DEG); }
+  function asind(x) { return Math.asin(x) * RAD; }
+  function atan2d(y, x) { return Math.atan2(y, x) * RAD; }
+
+  // Solve Kepler's equation, returns eccentric anomaly E (deg)
+  function kepler(M, e) {
+    M = rev(M);
+    var E = M + e * RAD * sind(M) * (1 + e * cosd(M));
+    var delta;
+    var i = 0;
+    do {
+      var E0 = E;
+      delta = (E0 - e * RAD * sind(E0) - M) / (1 - e * cosd(E0));
+      E = E0 - delta;
+      i++;
+    } while (Math.abs(delta) > 1e-7 && i < 100);
+    return E;
+  }
+
+  /*
+   * Orbital elements as a function of d = days since 2000 Jan 0.0 TT
+   * (i.e. d = JD - 2451543.5).
+   */
+  function elements(d) {
+    return {
+      Sun: {
+        N: 0.0, i: 0.0,
+        w: 282.9404 + 4.70935e-5 * d,
+        a: 1.0,
+        e: 0.016709 - 1.151e-9 * d,
+        M: 356.0470 + 0.9856002585 * d
+      },
+      Moon: {
+        N: 125.1228 - 0.0529538083 * d, i: 5.1454,
+        w: 318.0634 + 0.1643573223 * d,
+        a: 60.2666, // Earth radii
+        e: 0.054900,
+        M: 115.3654 + 13.0649929509 * d
+      },
+      Mercury: {
+        N: 48.3313 + 3.24587e-5 * d, i: 7.0047 + 5.00e-8 * d,
+        w: 29.1241 + 1.01444e-5 * d,
+        a: 0.387098,
+        e: 0.205635 + 5.59e-10 * d,
+        M: 168.6562 + 4.0923344368 * d
+      },
+      Venus: {
+        N: 76.6799 + 2.46590e-5 * d, i: 3.3946 + 2.75e-8 * d,
+        w: 54.8910 + 1.38374e-5 * d,
+        a: 0.723330,
+        e: 0.006773 - 1.302e-9 * d,
+        M: 48.0052 + 1.6021302244 * d
+      },
+      Mars: {
+        N: 49.5574 + 2.11081e-5 * d, i: 1.8497 - 1.78e-8 * d,
+        w: 286.5016 + 2.92961e-5 * d,
+        a: 1.523688,
+        e: 0.093405 + 2.516e-9 * d,
+        M: 18.6021 + 0.5240207766 * d
+      },
+      Jupiter: {
+        N: 100.4542 + 2.76854e-5 * d, i: 1.3030 - 1.557e-7 * d,
+        w: 273.8777 + 1.64505e-5 * d,
+        a: 5.20256,
+        e: 0.048498 + 4.469e-9 * d,
+        M: 19.8950 + 0.0830853001 * d
+      },
+      Saturn: {
+        N: 113.6634 + 2.38980e-5 * d, i: 2.4886 - 1.081e-7 * d,
+        w: 339.3939 + 2.97661e-5 * d,
+        a: 9.55475,
+        e: 0.055546 - 9.499e-9 * d,
+        M: 316.9670 + 0.0334442282 * d
+      }
+    };
+  }
+
+  // Heliocentric rectangular ecliptic coords for a planet element set.
+  function helioRect(el) {
+    var E = kepler(el.M, el.e);
+    var xv = el.a * (cosd(E) - el.e);
+    var yv = el.a * Math.sqrt(1 - el.e * el.e) * sind(E);
+    var v = atan2d(yv, xv);
+    var r = Math.sqrt(xv * xv + yv * yv);
+    var vw = v + el.w;
+    var xh = r * (cosd(el.N) * cosd(vw) - sind(el.N) * sind(vw) * cosd(el.i));
+    var yh = r * (sind(el.N) * cosd(vw) + cosd(el.N) * sind(vw) * cosd(el.i));
+    var zh = r * (sind(vw) * sind(el.i));
+    return { x: xh, y: yh, z: zh, r: r, v: v };
+  }
+
+  /*
+   * Returns an object keyed by planet name with TROPICAL geocentric ecliptic
+   * longitude in degrees [0,360), plus Rahu/Ketu (mean lunar nodes).
+   *   d : days since 2000 Jan 0.0 = JD - 2451543.5
+   */
+  function tropicalLongitudes(d) {
+    var el = elements(d);
+    var out = {};
+
+    // --- Sun (geocentric == its own orbit longitude) ---
+    var sun = helioRect(el.Sun);
+    var lonsun = rev(sun.v + el.Sun.w);
+    var rs = sun.r;
+    out.Sun = rev(lonsun);
+    var xs = rs * cosd(lonsun);
+    var ys = rs * sind(lonsun);
+
+    // --- Moon (geocentric) with main perturbations ---
+    var moon = helioRect(el.Moon);
+    var mlon = atan2d(moon.y, moon.x);
+    var mlat = atan2d(moon.z, Math.sqrt(moon.x * moon.x + moon.y * moon.y));
+
+    var Ms = el.Sun.M, Mm = el.Moon.M;
+    var Ls = rev(Ms + el.Sun.w);            // Sun mean longitude
+    var Lm = rev(Mm + el.Moon.w + el.Moon.N); // Moon mean longitude
+    var D = rev(Lm - Ls);                    // mean elongation
+    var F = rev(Lm - el.Moon.N);             // argument of latitude
+
+    var dLon =
+      -1.274 * sind(Mm - 2 * D) +
+      0.658 * sind(2 * D) +
+      -0.186 * sind(Ms) +
+      -0.059 * sind(2 * Mm - 2 * D) +
+      -0.057 * sind(Mm - 2 * D + Ms) +
+      0.053 * sind(Mm + 2 * D) +
+      0.046 * sind(2 * D - Ms) +
+      0.041 * sind(Mm - Ms) +
+      -0.035 * sind(D) +
+      -0.031 * sind(Mm + Ms) +
+      -0.015 * sind(2 * F - 2 * D) +
+      0.011 * sind(Mm - 4 * D);
+    mlon = rev(mlon + dLon);
+    out.Moon = mlon;
+
+    // --- Planets: heliocentric -> geocentric ---
+    var planets = ["Mercury", "Venus", "Mars", "Jupiter", "Saturn"];
+    var rect = {};
+    for (var p = 0; p < planets.length; p++) {
+      rect[planets[p]] = helioRect(el[planets[p]]);
+    }
+
+    // Perturbations for Jupiter & Saturn (mutual), using mean anomalies.
+    var Mj = el.Jupiter.M, Msa = el.Saturn.M;
+    var pertJ =
+      -0.332 * sind(2 * Mj - 5 * Msa - 67.6) +
+      -0.056 * sind(2 * Mj - 2 * Msa + 21) +
+      0.042 * sind(3 * Mj - 5 * Msa + 21) +
+      -0.036 * sind(Mj - 2 * Msa) +
+      0.022 * cosd(Mj - Msa) +
+      0.023 * sind(2 * Mj - 3 * Msa + 52) +
+      -0.016 * sind(Mj - 5 * Msa - 69);
+    var pertS =
+      0.812 * sind(2 * Mj - 5 * Msa - 67.6) +
+      -0.229 * cosd(2 * Mj - 4 * Msa - 2) +
+      0.119 * sind(Mj - 2 * Msa - 3) +
+      0.046 * sind(2 * Mj - 6 * Msa - 69) +
+      0.014 * sind(Mj - 3 * Msa + 32);
+
+    for (var k = 0; k < planets.length; k++) {
+      var name = planets[k];
+      var rc = rect[name];
+      var xg = rc.x + xs;
+      var yg = rc.y + ys;
+      var zg = rc.z;
+      var lon = rev(atan2d(yg, xg));
+      if (name === "Jupiter") lon = rev(lon + pertJ);
+      if (name === "Saturn") lon = rev(lon + pertS);
+      out[name] = lon;
+    }
+
+    // --- Lunar nodes (mean) ---
+    var rahu = rev(el.Moon.N); // mean ascending node longitude
+    out.Rahu = rahu;
+    out.Ketu = rev(rahu + 180);
+
+    return out;
+  }
+
+  // Obliquity of the ecliptic (deg) for days since 2000 Jan 0.0
+  function obliquity(d) {
+    return 23.4393 - 3.563e-7 * d;
+  }
+
+  var api = {
+    tropicalLongitudes: tropicalLongitudes,
+    obliquity: obliquity,
+    rev: rev,
+    _kepler: kepler,
+    _elements: elements
+  };
+
+  root.AHS = root.AHS || {};
+  root.AHS.ephemeris = api;
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+})(typeof window !== "undefined" ? window : globalThis);
+
+
+/* ===== js/astro-core.js ===== */
+/*
+ * astro-core.js
+ * Core Vedic/KP astrology computations built on top of ephemeris.js:
+ *   - Julian Day from local date/time + timezone
+ *   - Lahiri (Chitrapaksha) ayanamsa and tropical->sidereal conversion
+ *   - Nakshatra + pada
+ *   - KP sub-lord (Vimshottari 249 sub-division)
+ *   - Sidereal Ascendant (Lagna)
+ *   - Placidus house cusps (used by KP)
+ *   - Whole-sign house assignment (used by Parashara)
+ *
+ * Works in the browser (window.AHS) and Node (module.exports).
+ */
+(function (root) {
+  "use strict";
+
+  var eph = (typeof require !== "undefined")
+    ? require("./ephemeris.js")
+    : root.AHS.ephemeris;
+
+  var DEG = Math.PI / 180, RAD = 180 / Math.PI;
+  function rev(x) { x = x % 360; return x < 0 ? x + 360 : x; }
+  function sind(x) { return Math.sin(x * DEG); }
+  function cosd(x) { return Math.cos(x * DEG); }
+  function tand(x) { return Math.tan(x * DEG); }
+  function atan2d(y, x) { return Math.atan2(y, x) * RAD; }
+  function asind(x) { return Math.asin(Math.max(-1, Math.min(1, x))) * RAD; }
+  function acosd(x) { return Math.acos(Math.max(-1, Math.min(1, x))) * RAD; }
+
+  var SIGNS = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
+    "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"];
+
+  // Sign lords (rulers) -- traditional (no outer planets)
+  var SIGN_LORD = ["Mars", "Venus", "Mercury", "Moon", "Sun", "Mercury",
+    "Venus", "Mars", "Jupiter", "Saturn", "Saturn", "Jupiter"];
+
+  // 27 Nakshatras with their Vimshottari lords
+  var NAKSHATRAS = [
+    ["Ashwini", "Ketu"], ["Bharani", "Venus"], ["Krittika", "Sun"],
+    ["Rohini", "Moon"], ["Mrigashira", "Mars"], ["Ardra", "Rahu"],
+    ["Punarvasu", "Jupiter"], ["Pushya", "Saturn"], ["Ashlesha", "Mercury"],
+    ["Magha", "Ketu"], ["Purva Phalguni", "Venus"], ["Uttara Phalguni", "Sun"],
+    ["Hasta", "Moon"], ["Chitra", "Mars"], ["Swati", "Rahu"],
+    ["Vishakha", "Jupiter"], ["Anuradha", "Saturn"], ["Jyeshtha", "Mercury"],
+    ["Mula", "Ketu"], ["Purva Ashadha", "Venus"], ["Uttara Ashadha", "Sun"],
+    ["Shravana", "Moon"], ["Dhanishta", "Mars"], ["Shatabhisha", "Rahu"],
+    ["Purva Bhadrapada", "Jupiter"], ["Uttara Bhadrapada", "Saturn"], ["Revati", "Mercury"]
+  ];
+
+  // Vimshottari dasha order and years (sum 120)
+  var VIM_ORDER = ["Ketu", "Venus", "Sun", "Moon", "Mars", "Rahu", "Jupiter", "Saturn", "Mercury"];
+  var VIM_YEARS = { Ketu: 7, Venus: 20, Sun: 6, Moon: 10, Mars: 7, Rahu: 18, Jupiter: 16, Saturn: 19, Mercury: 17 };
+
+  /* ---------- Time ---------- */
+  // Gregorian date/time (UT) -> Julian Day
+  function julianDayUT(y, mo, d, hour, min, sec) {
+    hour = hour || 0; min = min || 0; sec = sec || 0;
+    var a = Math.floor((14 - mo) / 12);
+    var yy = y + 4800 - a;
+    var mm = mo + 12 * a - 3;
+    var jdn = d + Math.floor((153 * mm + 2) / 5) + 365 * yy +
+      Math.floor(yy / 4) - Math.floor(yy / 100) + Math.floor(yy / 400) - 32045;
+    var frac = (hour - 12) / 24 + min / 1440 + sec / 86400;
+    return jdn + frac;
+  }
+
+  // Local civil date/time + timezone offset (hours, east +) -> JD (UT)
+  function julianDayLocal(y, mo, d, hour, min, tzOffsetHours) {
+    var jdLocalNoonRef = julianDayUT(y, mo, d, hour, min, 0);
+    return jdLocalNoonRef - tzOffsetHours / 24;
+  }
+
+  /* ---------- Ayanamsa (Lahiri / Chitrapaksha) ---------- */
+  // J2000.0 value 23deg51'11" with precession ~50.29"/yr.
+  function lahiriAyanamsa(jd) {
+    var T = (jd - 2451545.0) / 36525.0; // Julian centuries from J2000
+    return 23.85234 + 1.396971 * T + 0.0003086 * T * T;
+  }
+
+  function toSidereal(tropLon, ayan) {
+    return rev(tropLon - ayan);
+  }
+
+  /* ---------- Sign / Nakshatra / Sub-lord ---------- */
+  function signInfo(siderealLon) {
+    var idx = Math.floor(rev(siderealLon) / 30);
+    return {
+      index: idx,
+      name: SIGNS[idx],
+      lord: SIGN_LORD[idx],
+      degInSign: rev(siderealLon) - idx * 30
+    };
+  }
+
+  function nakshatraInfo(siderealLon) {
+    var lon = rev(siderealLon);
+    var span = 360 / 27; // 13.3333
+    var idx = Math.floor(lon / span);
+    var pada = Math.floor((lon - idx * span) / (span / 4)) + 1;
+    return {
+      index: idx,
+      name: NAKSHATRAS[idx][0],
+      lord: NAKSHATRAS[idx][1],
+      pada: pada
+    };
+  }
+
+  /*
+   * KP sub-lord: subdivide the nakshatra (13deg20') into 9 unequal parts in
+   * Vimshottari proportion, starting from the nakshatra (star) lord.
+   */
+  function subLord(siderealLon) {
+    var lon = rev(siderealLon);
+    var span = 360 / 27;
+    var nakIdx = Math.floor(lon / span);
+    var posInNak = lon - nakIdx * span; // 0..13.3333
+    var starLord = NAKSHATRAS[nakIdx][1];
+    var startPos = VIM_ORDER.indexOf(starLord);
+    var acc = 0;
+    for (var k = 0; k < 9; k++) {
+      var lord = VIM_ORDER[(startPos + k) % 9];
+      var subSpan = (VIM_YEARS[lord] / 120) * span;
+      if (posInNak < acc + subSpan || k === 8) {
+        return { lord: lord, starLord: starLord };
+      }
+      acc += subSpan;
+    }
+    return { lord: starLord, starLord: starLord };
+  }
+
+  // Full placement descriptor for a sidereal longitude
+  function describe(siderealLon) {
+    var s = signInfo(siderealLon);
+    var n = nakshatraInfo(siderealLon);
+    var sub = subLord(siderealLon);
+    return {
+      lon: rev(siderealLon),
+      sign: s.name, signIndex: s.index, signLord: s.lord, degInSign: s.degInSign,
+      nakshatra: n.name, nakshatraLord: n.lord, pada: n.pada,
+      subLord: sub.lord
+    };
+  }
+
+  /* ---------- Ascendant & Houses ---------- */
+  // Greenwich Mean Sidereal Time in degrees
+  function gmstDeg(jd) {
+    return rev(280.46061837 + 360.98564736629 * (jd - 2451545.0));
+  }
+
+  // Local Sidereal Time (= RAMC) in degrees; lonEast positive
+  function ramcDeg(jd, lonEast) {
+    return rev(gmstDeg(jd) + lonEast);
+  }
+
+  // TROPICAL ascendant longitude (deg)
+  function tropicalAscendant(ramc, latDeg, eps) {
+    var asc = rev(atan2d(
+      cosd(ramc),
+      -(sind(ramc) * cosd(eps) + tand(latDeg) * sind(eps))
+    ));
+    // The ascendant must lie on the eastern horizon, i.e. between the MC and
+    // the IC going eastward: rev(Asc - MC) must be in (0,180).
+    var mc = rev(atan2d(sind(ramc), cosd(ramc) * cosd(eps)));
+    if (Math.abs(wrap180(mc - ramc)) > 90) mc = rev(mc + 180);
+    if (rev(asc - mc) >= 180) asc = rev(asc + 180);
+    return asc;
+  }
+
+  // RA from ecliptic longitude (point on ecliptic, lat=0)
+  function raFromLon(lon, eps) { return rev(atan2d(sind(lon) * cosd(eps), cosd(lon))); }
+  // declination from ecliptic longitude
+  function decFromLon(lon, eps) { return asind(sind(eps) * sind(lon)); }
+  function wrap180(x) { x = rev(x); return x > 180 ? x - 360 : x; }
+
+  /*
+   * Placidus intermediate cusps (11, 12, 2, 3) via semi-arc trisection.
+   * Returns tropical ecliptic longitude for the requested house number.
+   */
+  function placidusCusp(houseNo, ramc, latDeg, eps) {
+    // target hour-angle as a function of the point's own semi-diurnal arc (SDA)
+    function targetHA(sda) {
+      switch (houseNo) {
+        case 11: return -sda / 3;
+        case 12: return -2 * sda / 3;
+        case 2: return -(2 * sda / 3 + 60);
+        case 3: return -(sda / 3 + 120);
+      }
+    }
+    var offset = { 11: 30, 12: 60, 2: 120, 3: 150 }[houseNo];
+    var lon = rev(ramc + offset); // initial guess
+    for (var iter = 0; iter < 50; iter++) {
+      var dec = decFromLon(lon, eps);
+      var x = -tand(latDeg) * tand(dec);
+      var sda = (x <= -1) ? 180 : (x >= 1) ? 0 : acosd(x);
+      var raTarget = rev(ramc - targetHA(sda));
+      var lonNew = atan2d(sind(raTarget), cosd(raTarget) * cosd(eps));
+      lonNew = rev(lonNew);
+      // keep on same side as raTarget
+      if (Math.abs(wrap180(lonNew - raTarget)) > 90) lonNew = rev(lonNew + 180);
+      if (Math.abs(wrap180(lonNew - lon)) < 1e-7) { lon = lonNew; break; }
+      lon = lonNew;
+    }
+    return rev(lon);
+  }
+
+  /*
+   * Full set of 12 Placidus cusps (tropical). Returns array of 12 longitudes,
+   * cusps[0] = 1st house cusp (Ascendant), cusps[9] = 10th (MC).
+   */
+  function placidusCusps(ramc, latDeg, eps) {
+    var asc = tropicalAscendant(ramc, latDeg, eps);
+    var mc = rev(atan2d(sind(ramc), cosd(ramc) * cosd(eps)));
+    // MC should be near RAMC region
+    if (Math.abs(wrap180(mc - ramc)) > 90) mc = rev(mc + 180);
+
+    var c = new Array(12);
+    c[0] = asc;            // 1
+    c[9] = mc;             // 10
+    c[10] = placidusCusp(11, ramc, latDeg, eps);
+    c[11] = placidusCusp(12, ramc, latDeg, eps);
+    c[1] = placidusCusp(2, ramc, latDeg, eps);
+    c[2] = placidusCusp(3, ramc, latDeg, eps);
+    // opposite cusps are 180 apart
+    c[3] = rev(c[9] + 180);  // 4 = IC
+    c[4] = rev(c[10] + 180); // 5
+    c[5] = rev(c[11] + 180); // 6
+    c[6] = rev(c[0] + 180);  // 7
+    c[7] = rev(c[1] + 180);  // 8
+    c[8] = rev(c[2] + 180);  // 9
+    return c;
+  }
+
+  // Assign a body to a house given cusp longitudes (KP/Placidus, sidereal in & cusps).
+  function houseOf(lon, cusps) {
+    lon = rev(lon);
+    for (var i = 0; i < 12; i++) {
+      var start = cusps[i];
+      var end = cusps[(i + 1) % 12];
+      var span = rev(end - start);
+      var rel = rev(lon - start);
+      if (rel < span) return i + 1;
+    }
+    return 1;
+  }
+
+  // Whole-sign house number for Parashara: house = sign offset from lagna sign + 1
+  function wholeSignHouse(signIndex, lagnaSignIndex) {
+    return ((signIndex - lagnaSignIndex + 12) % 12) + 1;
+  }
+
+  /* ---------- Top-level chart builder ---------- */
+  var BODIES = ["Sun", "Moon", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", "Rahu", "Ketu"];
+
+  /*
+   * Build a complete chart.
+   *   opts: { jd, latDeg, lonEast }
+   * Returns { jd, ayanamsa, ascendant, planets:{name:desc}, cusps[], ... }
+   */
+  function buildChart(opts) {
+    var jd = opts.jd;
+    var d = jd - 2451543.5;
+    var ayan = lahiriAyanamsa(jd);
+    var eps = eph.obliquity(d);
+    var trop = eph.tropicalLongitudes(d);
+
+    var planets = {};
+    for (var i = 0; i < BODIES.length; i++) {
+      var nm = BODIES[i];
+      var sid = toSidereal(trop[nm], ayan);
+      planets[nm] = describe(sid);
+    }
+
+    var ramc = ramcDeg(jd, opts.lonEast);
+    var ascTrop = tropicalAscendant(ramc, opts.latDeg, eps);
+    var ascSid = toSidereal(ascTrop, ayan);
+    var ascDesc = describe(ascSid);
+
+    // Placidus cusps (sidereal) for KP
+    var cuspsTrop = placidusCusps(ramc, opts.latDeg, eps);
+    var cuspsSid = cuspsTrop.map(function (c) { return toSidereal(c, ayan); });
+    var cuspDesc = cuspsSid.map(function (c) { return describe(c); });
+
+    var lagnaSignIndex = ascDesc.signIndex;
+
+    // Assign houses
+    for (var b in planets) {
+      planets[b].wholeSignHouse = wholeSignHouse(planets[b].signIndex, lagnaSignIndex);
+      planets[b].placidusHouse = houseOf(planets[b].lon, cuspsSid);
+    }
+
+    return {
+      jd: jd,
+      ayanamsa: ayan,
+      obliquity: eps,
+      ramc: ramc,
+      ascendant: ascDesc,
+      lagnaSignIndex: lagnaSignIndex,
+      planets: planets,
+      cuspsSidereal: cuspsSid,
+      cusps: cuspDesc
+    };
+  }
+
+  var api = {
+    SIGNS: SIGNS, SIGN_LORD: SIGN_LORD, NAKSHATRAS: NAKSHATRAS,
+    VIM_ORDER: VIM_ORDER, VIM_YEARS: VIM_YEARS, BODIES: BODIES,
+    rev: rev,
+    julianDayUT: julianDayUT,
+    julianDayLocal: julianDayLocal,
+    lahiriAyanamsa: lahiriAyanamsa,
+    toSidereal: toSidereal,
+    signInfo: signInfo,
+    nakshatraInfo: nakshatraInfo,
+    subLord: subLord,
+    describe: describe,
+    gmstDeg: gmstDeg,
+    ramcDeg: ramcDeg,
+    tropicalAscendant: tropicalAscendant,
+    placidusCusps: placidusCusps,
+    houseOf: houseOf,
+    wholeSignHouse: wholeSignHouse,
+    buildChart: buildChart
+  };
+
+  root.AHS = root.AHS || {};
+  root.AHS.core = api;
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+})(typeof window !== "undefined" ? window : globalThis);
+
+
+/* ===== js/data.js ===== */
+/*
+ * data.js
+ * Classical Vedic / KP reference data used for HEALTH interpretation.
+ * Sources: standard Brihat Parashara Hora Shastra significations, the
+ * Kalapurusha (cosmic body) sign-to-bodypart mapping, and common KP house
+ * groupings. This is reference knowledge, not reproduced source text.
+ *
+ * Works in the browser (window.AHS.data) and Node (module.exports).
+ */
+(function (root) {
+  "use strict";
+
+  // Natural benefic / malefic classification (Moon & Mercury treated neutral-ish
+  // but here simplified; refined for waxing Moon elsewhere if needed).
+  var NATURE = {
+    Sun: "malefic", Moon: "benefic", Mars: "malefic", Mercury: "benefic",
+    Jupiter: "benefic", Venus: "benefic", Saturn: "malefic",
+    Rahu: "malefic", Ketu: "malefic"
+  };
+
+  // Exaltation / debilitation sign index (0=Aries..11=Pisces); deep degree noted.
+  var DIGNITY = {
+    Sun: { exalt: 0, debil: 6, own: [4] },           // exalt Aries, debil Libra, own Leo
+    Moon: { exalt: 1, debil: 7, own: [3] },          // exalt Taurus, debil Scorpio, own Cancer
+    Mars: { exalt: 9, debil: 3, own: [0, 7] },       // exalt Capricorn, debil Cancer, own Aries/Scorpio
+    Mercury: { exalt: 5, debil: 11, own: [2, 5] },   // exalt Virgo, debil Pisces, own Gemini/Virgo
+    Jupiter: { exalt: 3, debil: 9, own: [8, 11] },   // exalt Cancer, debil Capricorn, own Sag/Pisces
+    Venus: { exalt: 11, debil: 5, own: [1, 6] },     // exalt Pisces, debil Virgo, own Taurus/Libra
+    Saturn: { exalt: 6, debil: 0, own: [9, 10] },    // exalt Libra, debil Aries, own Cap/Aquarius
+    Rahu: { exalt: 1, debil: 7, own: [] },
+    Ketu: { exalt: 7, debil: 1, own: [] }
+  };
+
+  // Planet -> body parts / physiological systems governed
+  var PLANET_BODY = {
+    Sun: ["heart", "bones", "right eye (males) / left eye (females)", "head", "spine", "general vitality & immunity"],
+    Moon: ["mind & emotions", "blood & body fluids", "stomach", "lungs", "left eye (males) / right eye (females)", "breasts", "lymphatic system"],
+    Mars: ["blood", "bone marrow", "muscles", "genitals", "energy/metabolism"],
+    Mercury: ["nervous system", "skin", "speech & vocal cords", "respiratory tract", "intellect", "hands"],
+    Jupiter: ["liver", "fat tissue", "pancreas", "spleen", "thighs", "arterial system"],
+    Venus: ["reproductive organs", "kidneys & urinary tract", "throat", "face", "eyes", "hormonal/endocrine balance"],
+    Saturn: ["bones & joints", "teeth", "knees", "nerves", "skin (chronic)", "muscular contraction"],
+    Rahu: ["nervous disorders", "skin", "feet", "undiagnosed/mysterious conditions"],
+    Ketu: ["wounds & surgery", "infections", "abdomen", "spine", "mysterious/auto-immune conditions"]
+  };
+
+  // Planet -> tendencies / ailments often associated (astrological tradition)
+  var PLANET_AILMENTS = {
+    Sun: ["fevers", "cardiac issues", "blood pressure", "eye strain", "bone/spine problems", "low immunity"],
+    Moon: ["mental/emotional stress", "anxiety", "anaemia & blood disorders", "digestive/stomach issues", "cough & cold", "fluid retention"],
+    Mars: ["accidents & injuries", "inflammation", "infections & fevers", "surgery", "blood disorders", "burns", "muscular strain"],
+    Mercury: ["nervous disorders", "skin allergies", "speech issues", "respiratory complaints", "anxiety/over-thinking"],
+    Jupiter: ["liver disorders", "diabetes", "obesity/weight gain", "cholesterol", "swelling/oedema"],
+    Venus: ["reproductive/urinary issues", "kidney problems", "hormonal imbalance", "throat ailments", "diabetes (with Jupiter)"],
+    Saturn: ["chronic & long-term ailments", "arthritis & joint pain", "dental problems", "nerve pain", "depression", "fatigue", "degenerative conditions"],
+    Rahu: ["undiagnosed/mysterious illness", "phobias & anxiety", "poisoning/toxicity", "skin conditions", "viral infections"],
+    Ketu: ["surgical conditions", "infections", "ulcers", "mysterious/auto-immune issues", "accidents"]
+  };
+
+  // Sign (0..11) -> body part per Kalapurusha (head to feet)
+  var SIGN_BODY = [
+    ["head", "brain", "face (upper)"],                         // Aries
+    ["face", "throat", "neck", "eyes", "teeth"],               // Taurus
+    ["shoulders", "arms", "hands", "lungs", "nervous system"], // Gemini
+    ["chest", "lungs", "breasts", "stomach", "heart region"],  // Cancer
+    ["heart", "upper back", "spine", "upper abdomen"],         // Leo
+    ["intestines", "digestive system", "abdomen"],             // Virgo
+    ["kidneys", "lower back", "lumbar region"],                // Libra
+    ["genitals", "excretory organs", "bladder", "reproductive"], // Scorpio
+    ["hips", "thighs", "arterial system", "liver"],            // Sagittarius
+    ["knees", "joints", "bones", "skin"],                      // Capricorn
+    ["calves", "ankles", "circulatory system"],                // Aquarius
+    ["feet", "lymphatic system", "general fluids"]             // Pisces
+  ];
+
+  // House significations relevant to health/medical KP & Parashara
+  var HOUSE_HEALTH = {
+    1: "Body, physical constitution, vitality, head, overall well-being",
+    2: "Face, right eye, teeth, mouth, nourishment/diet",
+    3: "Throat, shoulders, arms, ears (right), nervous system",
+    4: "Chest, lungs, heart region, emotional well-being",
+    5: "Stomach, upper abdomen, heart, mental state",
+    6: "DISEASE, illness, infection, injuries, debts, daily health (primary disease house)",
+    7: "Pelvis, kidneys, reproductive organs, partner's health",
+    8: "Chronic & incurable disease, longevity, surgery, accidents, cause of death",
+    9: "Hips, thighs, arterial system",
+    10: "Knees, joints, professional stress",
+    11: "Calves, ankles, recovery/cure, fulfilment (positive for health)",
+    12: "Hospitalization, bed-rest, loss, sleep, feet, left eye, expenditure on health"
+  };
+
+  // KP house groupings used in medical analysis
+  var KP_DISEASE_HOUSES = [6, 8, 12];      // negative: disease, chronic, hospitalization
+  var KP_RECOVERY_HOUSES = [1, 5, 11];     // positive: good health, recovery, cure
+  // Maraka (death-inflicting) houses in Parashara
+  var MARAKA_HOUSES = [2, 7];
+
+  // House lord ownership (which houses a planet rules from a given lagna sign)
+  // Provided as a helper rather than data; lagna-dependent. See engine.
+
+  var api = {
+    NATURE: NATURE,
+    DIGNITY: DIGNITY,
+    PLANET_BODY: PLANET_BODY,
+    PLANET_AILMENTS: PLANET_AILMENTS,
+    SIGN_BODY: SIGN_BODY,
+    HOUSE_HEALTH: HOUSE_HEALTH,
+    KP_DISEASE_HOUSES: KP_DISEASE_HOUSES,
+    KP_RECOVERY_HOUSES: KP_RECOVERY_HOUSES,
+    MARAKA_HOUSES: MARAKA_HOUSES
+  };
+
+  root.AHS = root.AHS || {};
+  root.AHS.data = api;
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+})(typeof window !== "undefined" ? window : globalThis);
+
+
+/* ===== js/parashara.js ===== */
+/*
+ * parashara.js
+ * Health analysis using Parashara (Brihat Parashara Hora Shastra) principles:
+ *   - Lagna (1st) & Lagna lord = body, constitution, vitality
+ *   - 6th house = disease, 8th = chronic/surgery/longevity, 12th = hospitalization
+ *   - Malefic afflictions, debilitation, dusthana placements
+ *   - Body-part mapping via afflicted planets (karaka) and signs (Kalapurusha)
+ *
+ * Whole-sign house system (classical Parashara).
+ * Works in browser (window.AHS.parashara) and Node.
+ */
+(function (root) {
+  "use strict";
+
+  var core = (typeof require !== "undefined") ? require("./astro-core.js") : root.AHS.core;
+  var data = (typeof require !== "undefined") ? require("./data.js") : root.AHS.data;
+
+  var GRAHAS = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"];
+
+  // Houses ruled by each planet from a given lagna sign (whole-sign).
+  function houseLords(lagnaSignIndex) {
+    var houseToLord = {};
+    var lordToHouses = {};
+    for (var h = 1; h <= 12; h++) {
+      var signIdx = (lagnaSignIndex + h - 1) % 12;
+      var lord = core.SIGN_LORD[signIdx];
+      houseToLord[h] = lord;
+      (lordToHouses[lord] = lordToHouses[lord] || []).push(h);
+    }
+    return { houseToLord: houseToLord, lordToHouses: lordToHouses };
+  }
+
+  // Whole-sign aspects a planet casts (house numbers it aspects FROM its house).
+  function aspectsFrom(planet, house) {
+    var asp = [(house + 6 - 1) % 12 + 1]; // 7th aspect (all planets)
+    if (planet === "Mars") asp.push((house + 3) % 12 + 1, (house + 7) % 12 + 1); // 4th & 8th
+    if (planet === "Jupiter") asp.push((house + 4) % 12 + 1, (house + 8) % 12 + 1); // 5th & 9th
+    if (planet === "Saturn") asp.push((house + 2) % 12 + 1, (house + 9) % 12 + 1); // 3rd & 10th
+    // normalize
+    return asp.map(function (x) { return ((x - 1) % 12) + 1; });
+  }
+
+  function dignityOf(planet, signIndex) {
+    var d = data.DIGNITY[planet];
+    if (!d) return "neutral";
+    if (signIndex === d.exalt) return "exalted";
+    if (signIndex === d.debil) return "debilitated";
+    if (d.own.indexOf(signIndex) >= 0) return "own sign";
+    return "neutral";
+  }
+
+  function isMalefic(p) { return data.NATURE[p] === "malefic"; }
+
+  // Build planet->house and house->planets maps using whole-sign houses
+  function houseMaps(chart) {
+    var planetHouse = {}, housePlanets = {};
+    for (var i = 1; i <= 12; i++) housePlanets[i] = [];
+    GRAHAS.forEach(function (p) {
+      var h = chart.planets[p].wholeSignHouse;
+      planetHouse[p] = h;
+      housePlanets[h].push(p);
+    });
+    return { planetHouse: planetHouse, housePlanets: housePlanets };
+  }
+
+  function uniq(arr) { return arr.filter(function (v, i) { return arr.indexOf(v) === i; }); }
+
+  function bodyPartsFor(planet, signIndex) {
+    var parts = (data.PLANET_BODY[planet] || []).slice(0, 3);
+    var signParts = (data.SIGN_BODY[signIndex] || []).slice(0, 2);
+    return uniq(parts.concat(signParts));
+  }
+
+  /*
+   * Main analysis. Returns a structured report.
+   *   chart : output of core.buildChart
+   */
+  function analyze(chart) {
+    var lagnaSign = chart.lagnaSignIndex;
+    var hl = houseLords(lagnaSign);
+    var maps = houseMaps(chart);
+    var findings = [];
+    var supportive = [];
+    var score = 70; // baseline vitality score (0-100), adjusted by factors
+
+    // ---- 1. Lagna lord (constitution / vitality) ----
+    var lagnaLord = hl.houseToLord[1];
+    var llHouse = maps.planetHouse[lagnaLord];
+    var llSign = chart.planets[lagnaLord].signIndex;
+    var llDignity = dignityOf(lagnaLord, llSign);
+    var dusthana = [6, 8, 12];
+    var kendraTrikona = [1, 4, 7, 10, 5, 9];
+
+    var llNote = "Lagna lord " + lagnaLord + " is in house " + llHouse +
+      " (" + chart.planets[lagnaLord].sign + "), " + llDignity + ".";
+    if (dusthana.indexOf(llHouse) >= 0) {
+      score -= 12;
+      findings.push({
+        area: "Overall constitution",
+        severity: "moderate",
+        basis: llNote + " Placement in a dusthana (6/8/12) can undermine baseline vitality and resilience.",
+        bodyParts: bodyPartsFor(lagnaLord, llSign)
+      });
+    } else if (kendraTrikona.indexOf(llHouse) >= 0) {
+      score += 6;
+      supportive.push(llNote + " Placement in a kendra/trikona supports a resilient constitution.");
+    } else {
+      supportive.push(llNote);
+    }
+    if (llDignity === "debilitated") { score -= 8; }
+    else if (llDignity === "exalted" || llDignity === "own sign") { score += 6; supportive.push("Lagna lord is dignified (" + llDignity + "), strengthening overall health."); }
+
+    // ---- 2. Malefic afflictions to the Ascendant (1st house) ----
+    var maleficsInLagna = maps.housePlanets[1].filter(isMalefic);
+    var aspectingLagna = [];
+    GRAHAS.forEach(function (p) {
+      if (!isMalefic(p)) return;
+      var h = maps.planetHouse[p];
+      if (aspectsFrom(p, h).indexOf(1) >= 0 && h !== 1) aspectingLagna.push(p);
+    });
+    var lagnaAfflictors = uniq(maleficsInLagna.concat(aspectingLagna));
+    if (lagnaAfflictors.length) {
+      score -= 4 * lagnaAfflictors.length;
+      var parts = [];
+      lagnaAfflictors.forEach(function (p) {
+        parts = parts.concat(data.PLANET_BODY[p].slice(0, 2));
+      });
+      parts = parts.concat(data.SIGN_BODY[lagnaSign].slice(0, 2));
+      findings.push({
+        area: "Ascendant under malefic influence",
+        severity: lagnaAfflictors.length >= 2 ? "high" : "moderate",
+        basis: "Malefic(s) " + lagnaAfflictors.join(", ") + " influence the Ascendant (" +
+          core.SIGNS[lagnaSign] + "), which can stress the body's head/constitution and the parts they govern.",
+        bodyParts: uniq(parts)
+      });
+    }
+
+    // ---- 3. 6th house (disease) ----
+    analyzeDuhsthana(6, "Disease & infections (6th house)", chart, maps, hl, findings, function () { score -= 6; });
+    // ---- 4. 8th house (chronic / surgery / longevity) ----
+    analyzeDuhsthana(8, "Chronic ailments, surgery & longevity (8th house)", chart, maps, hl, findings, function () { score -= 7; });
+    // ---- 5. 12th house (hospitalization / sleep / loss) ----
+    analyzeDuhsthana(12, "Hospitalization, sleep & recovery (12th house)", chart, maps, hl, findings, function () { score -= 4; });
+
+    // ---- 6. Moon = mind & emotional health ----
+    var moonH = maps.planetHouse.Moon;
+    var moonAfflictors = [];
+    GRAHAS.forEach(function (p) {
+      if (p === "Moon" || !isMalefic(p)) return;
+      var h = maps.planetHouse[p];
+      if (h === moonH) moonAfflictors.push(p + " (conjunct)");
+      else if (aspectsFrom(p, h).indexOf(moonH) >= 0) moonAfflictors.push(p + " (aspect)");
+    });
+    if (moonAfflictors.length || dusthana.indexOf(moonH) >= 0) {
+      score -= 5;
+      findings.push({
+        area: "Mind & emotional well-being (Moon)",
+        severity: moonAfflictors.length >= 2 ? "high" : "moderate",
+        basis: "The Moon (mind, emotions, body fluids) is " +
+          (dusthana.indexOf(moonH) >= 0 ? "placed in dusthana house " + moonH : "in house " + moonH) +
+          (moonAfflictors.length ? " and afflicted by " + moonAfflictors.join(", ") : "") +
+          ". Watch for stress, sleep, anxiety and fluid/blood balance.",
+        bodyParts: bodyPartsFor("Moon", chart.planets.Moon.signIndex)
+      });
+    } else {
+      supportive.push("The Moon is comparatively unafflicted, supporting emotional stability and good fluid balance.");
+    }
+
+    // ---- 7. Debilitated planets anywhere -> flag their domains ----
+    GRAHAS.forEach(function (p) {
+      var s = chart.planets[p].signIndex;
+      if (dignityOf(p, s) === "debilitated") {
+        score -= 3;
+        findings.push({
+          area: p + " debilitated (in " + core.SIGNS[s] + ")",
+          severity: "low",
+          basis: p + " is debilitated, weakening the organs/functions it governs. Keep the related systems monitored.",
+          bodyParts: data.PLANET_BODY[p].slice(0, 3)
+        });
+      }
+    });
+
+    score = Math.max(5, Math.min(95, Math.round(score)));
+
+    var summary = buildSummary(score, chart, lagnaLord, llHouse);
+
+    return {
+      method: "Parashara",
+      score: score,
+      summary: summary,
+      lagnaSign: core.SIGNS[lagnaSign],
+      lagnaLord: lagnaLord,
+      houseLords: hl.houseToLord,
+      findings: findings,
+      supportive: supportive
+    };
+  }
+
+  function analyzeDuhsthana(houseNum, label, chart, maps, hl, findings, penalize) {
+    var occupants = maps.housePlanets[houseNum];
+    var lord = hl.houseToLord[houseNum];
+    var lordHouse = maps.planetHouse[lord];
+    var notes = [];
+    var bodyParts = [];
+
+    if (occupants.length) {
+      occupants.forEach(function (p) {
+        bodyParts = bodyParts.concat(data.PLANET_BODY[p].slice(0, 2));
+      });
+      notes.push("Occupied by " + occupants.join(", ") + " - their governed organs/functions are emphasised here.");
+    }
+    // The lord of this house tied to other disease houses increases tendency
+    var lordSignParts = data.SIGN_BODY[chart.planets[lord].signIndex] || [];
+    if ([6, 8, 12].indexOf(lordHouse) >= 0) {
+      notes.push("The " + houseNum + "th lord (" + lord + ") sits in dusthana house " + lordHouse +
+        ", reinforcing this area.");
+    }
+    bodyParts = bodyParts.concat(lordSignParts.slice(0, 1));
+
+    if (notes.length) {
+      penalize();
+      findings.push({
+        area: label,
+        severity: occupants.filter(function (p) { return data.NATURE[p] === "malefic"; }).length >= 2 ? "high" : "moderate",
+        basis: notes.join(" ") + " " + (data.HOUSE_HEALTH[houseNum] || ""),
+        bodyParts: bodyParts.filter(function (v, i) { return bodyParts.indexOf(v) === i; })
+      });
+    }
+  }
+
+  function buildSummary(score, chart, lagnaLord, llHouse) {
+    var band = score >= 75 ? "robust" : score >= 60 ? "generally good" :
+      score >= 45 ? "moderate, with areas needing attention" : "delicate; several factors warrant care";
+    return "Parashara assessment: overall constitution appears " + band +
+      " (vitality index " + score + "/100). The Ascendant is " + chart.ascendant.sign +
+      " with lagna lord " + lagnaLord + " in house " + llHouse +
+      ". The findings below highlight body systems indicated by classical karakas and house placements.";
+  }
+
+  var api = { analyze: analyze, houseLords: houseLords, dignityOf: dignityOf, aspectsFrom: aspectsFrom };
+  root.AHS = root.AHS || {};
+  root.AHS.parashara = api;
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+})(typeof window !== "undefined" ? window : globalThis);
+
+
+/* ===== js/kp.js ===== */
+/*
+ * kp.js
+ * Health analysis using Krishnamurti Paddhati (KP):
+ *   - Placidus cuspal sub-lords
+ *   - 4-fold significators of houses (occupant's star, occupant, owner's star, owner)
+ *   - Health verdict from sub-lords of cusps 1 (body), 6 (disease), 8 (chronic), 12 (hospitalization)
+ *   - A planet gives primarily the results of the house(s) signified by its STAR (nakshatra) lord
+ *
+ * Works in browser (window.AHS.kp) and Node.
+ */
+(function (root) {
+  "use strict";
+
+  var core = (typeof require !== "undefined") ? require("./astro-core.js") : root.AHS.core;
+  var data = (typeof require !== "undefined") ? require("./data.js") : root.AHS.data;
+
+  var GRAHAS = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"];
+
+  function uniq(a) { return a.filter(function (v, i) { return a.indexOf(v) === i; }); }
+
+  // Houses (1..12) owned by a planet = cusps falling in signs ruled by that planet.
+  function ownedHouses(chart, planet) {
+    var houses = [];
+    for (var h = 0; h < 12; h++) {
+      if (chart.cusps[h].signLord === planet) houses.push(h + 1);
+    }
+    return houses;
+  }
+
+  function occupiedHouse(chart, planet) {
+    return chart.planets[planet].placidusHouse;
+  }
+
+  /*
+   * Houses signified by a planet (KP). The planet primarily delivers the
+   * houses signified by its STAR lord, then its own occupation/ownership.
+   * Returns { strong:[houses via star lord], own:[occupied+owned], all:[...] }
+   */
+  function planetSignifications(chart, planet) {
+    var starLord = chart.planets[planet].nakshatraLord;
+    var viaStar = [occupiedHouse(chart, starLord)].concat(ownedHouses(chart, starLord));
+    var own = [occupiedHouse(chart, planet)].concat(ownedHouses(chart, planet));
+
+    // Nodes also act for their sign-lord (depositor)
+    if (planet === "Rahu" || planet === "Ketu") {
+      var dep = chart.planets[planet].signLord;
+      own = own.concat([occupiedHouse(chart, dep)]).concat(ownedHouses(chart, dep));
+    }
+    viaStar = uniq(viaStar);
+    own = uniq(own);
+    return { strong: viaStar, own: own, all: uniq(viaStar.concat(own)) };
+  }
+
+  // 4-fold significators of a house (which planets signify it).
+  function houseSignificators(chart, houseNum) {
+    var sigs = [];
+    // occupants of the house
+    var occupants = GRAHAS.filter(function (p) { return occupiedHouse(chart, p) === houseNum; });
+    // owner(s) of the house
+    var owners = GRAHAS.filter(function (p) { return ownedHouses(chart, p).indexOf(houseNum) >= 0; });
+
+    // Level 1: planets in the star of occupants
+    GRAHAS.forEach(function (p) {
+      if (occupants.indexOf(chart.planets[p].nakshatraLord) >= 0) sigs.push({ planet: p, level: 1 });
+    });
+    // Level 2: occupants
+    occupants.forEach(function (p) { sigs.push({ planet: p, level: 2 }); });
+    // Level 3: planets in the star of owners
+    GRAHAS.forEach(function (p) {
+      if (owners.indexOf(chart.planets[p].nakshatraLord) >= 0) sigs.push({ planet: p, level: 3 });
+    });
+    // Level 4: owners
+    owners.forEach(function (p) { sigs.push({ planet: p, level: 4 }); });
+
+    // dedupe keeping strongest (lowest level)
+    var best = {};
+    sigs.forEach(function (s) {
+      if (best[s.planet] === undefined || s.level < best[s.planet]) best[s.planet] = s.level;
+    });
+    return Object.keys(best).map(function (p) { return { planet: p, level: best[p] }; })
+      .sort(function (a, b) { return a.level - b.level; });
+  }
+
+  function signifiesAny(chart, planet, houseList) {
+    var sig = planetSignifications(chart, planet);
+    return houseList.some(function (h) { return sig.all.indexOf(h) >= 0; });
+  }
+
+  function bodyPartsFor(planet, signIndex) {
+    return uniq((data.PLANET_BODY[planet] || []).slice(0, 3)
+      .concat((data.SIGN_BODY[signIndex] || []).slice(0, 2)));
+  }
+
+  /*
+   * Main KP health analysis.
+   */
+  function analyze(chart) {
+    var DIS = data.KP_DISEASE_HOUSES;   // [6,8,12]
+    var REC = data.KP_RECOVERY_HOUSES;  // [1,5,11]
+    var findings = [];
+    var cuspReports = [];
+    var score = 70;
+
+    // ---- Cuspal sub-lord verdicts for health-relevant cusps ----
+    var healthCusps = [
+      { h: 1, label: "Body & general health (1st cusp)" },
+      { h: 6, label: "Disease & illness (6th cusp)" },
+      { h: 8, label: "Chronic ailments / surgery (8th cusp)" },
+      { h: 12, label: "Hospitalization / bed-rest (12th cusp)" }
+    ];
+
+    healthCusps.forEach(function (c) {
+      var subLord = chart.cusps[c.h - 1].subLord;
+      var sig = planetSignifications(chart, subLord);
+      var signifiesDisease = DIS.some(function (h) { return sig.all.indexOf(h) >= 0; });
+      var signifiesRecovery = REC.some(function (h) { return sig.all.indexOf(h) >= 0; });
+
+      var verdict, sev;
+      if (c.h === 1) {
+        // 1st cusp sub-lord: good health if it signifies 1/5/11 and NOT 6/8/12
+        if (signifiesDisease && !signifiesRecovery) { verdict = "indicates vulnerability to ill-health"; sev = "high"; score -= 10; }
+        else if (signifiesDisease && signifiesRecovery) { verdict = "mixed - health challenges with capacity to recover"; sev = "moderate"; score -= 4; }
+        else { verdict = "supports good general health"; sev = "low"; score += 6; }
+      } else {
+        // 6/8/12 cusp sub-lord signifying disease houses => that affliction can manifest
+        if (signifiesDisease) {
+          verdict = "active - its sub-lord signifies disease houses (6/8/12), so this area can manifest";
+          sev = c.h === 8 ? "high" : "moderate";
+          score -= (c.h === 8 ? 8 : 5);
+        } else if (signifiesRecovery) {
+          verdict = "subdued - sub-lord leans toward recovery houses (1/5/11)";
+          sev = "low";
+          score += 3;
+        } else {
+          verdict = "neutral";
+          sev = "low";
+        }
+      }
+
+      cuspReports.push({
+        cusp: c.h,
+        label: c.label,
+        subLord: subLord,
+        signifies: sig.all.slice().sort(function (a, b) { return a - b; }),
+        verdict: verdict,
+        severity: sev
+      });
+    });
+
+    // ---- Planets that are significators of disease houses 6/8/12 ----
+    var diseaseSignificators = {};
+    DIS.forEach(function (h) {
+      houseSignificators(chart, h).forEach(function (s) {
+        if (!diseaseSignificators[s.planet] || s.level < diseaseSignificators[s.planet].level) {
+          diseaseSignificators[s.planet] = { level: s.level, house: h };
+        }
+      });
+    });
+
+    Object.keys(diseaseSignificators).forEach(function (p) {
+      var info = diseaseSignificators[p];
+      var signIndex = chart.planets[p].signIndex;
+      // strong significator (level 1-2) and the planet itself afflicting => emphasise
+      var sev = info.level <= 2 ? "moderate" : "low";
+      findings.push({
+        area: p + " - significator of disease house " + info.house,
+        severity: sev,
+        basis: p + " (in " + chart.planets[p].sign + ", star of " + chart.planets[p].nakshatraLord +
+          ") is a level-" + info.level + " significator of house " + info.house +
+          ". In KP this links its governed organs/functions to that house's matters.",
+        bodyParts: bodyPartsFor(p, signIndex)
+      });
+    });
+
+    score = Math.max(5, Math.min(95, Math.round(score)));
+
+    // ---- Overall verdict ----
+    var firstCusp = cuspReports[0];
+    var band = score >= 75 ? "favourable" : score >= 60 ? "reasonably stable" :
+      score >= 45 ? "guarded - several cuspal links to disease houses" : "fragile - strong cuspal links to 6/8/12";
+
+    var summary = "KP assessment: health outlook appears " + band + " (index " + score + "/100). " +
+      "The 1st cuspal sub-lord is " + firstCusp.subLord + ", which " + firstCusp.verdict + ". " +
+      "Cuspal sub-lords and the significators of houses 6/8/12 below point to the systems most likely involved.";
+
+    return {
+      method: "KP (Krishnamurti Paddhati)",
+      score: score,
+      summary: summary,
+      cuspReports: cuspReports,
+      findings: findings,
+      ascendant: chart.ascendant.sign
+    };
+  }
+
+  var api = {
+    analyze: analyze,
+    planetSignifications: planetSignifications,
+    houseSignificators: houseSignificators,
+    ownedHouses: ownedHouses
+  };
+  root.AHS = root.AHS || {};
+  root.AHS.kp = api;
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+})(typeof window !== "undefined" ? window : globalThis);
+
+
+/* ===== js/app.js ===== */
+/*
+ * app.js -- UI wiring for the Astrological Health Screener.
+ * Depends on (loaded first): AHS.ephemeris, AHS.core, AHS.data, AHS.parashara, AHS.kp
+ */
+(function () {
+  "use strict";
+
+  var core = window.AHS.core;
+  var data = window.AHS.data;
+  var parashara = window.AHS.parashara;
+  var kp = window.AHS.kp;
+
+  var $ = function (id) { return document.getElementById(id); };
+  function el(tag, cls, html) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html !== undefined) e.innerHTML = html;
+    return e;
+  }
+  function fmtDeg(d) {
+    var deg = Math.floor(d);
+    var m = Math.round((d - deg) * 60);
+    if (m === 60) { deg += 1; m = 0; }
+    return deg + "\u00b0" + (m < 10 ? "0" : "") + m + "'";
+  }
+
+  /* ----------------- City geocoding (Open-Meteo, no key) ----------------- */
+  function searchCity() {
+    var q = $("city").value.trim();
+    var list = $("city-results");
+    if (!q) return;
+    list.hidden = false;
+    list.innerHTML = "<li>Searching\u2026</li>";
+    fetch("https://geocoding-api.open-meteo.com/v1/search?count=8&language=en&format=json&name=" + encodeURIComponent(q))
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        list.innerHTML = "";
+        if (!j.results || !j.results.length) {
+          list.innerHTML = "<li>No matches. Enter latitude/longitude manually.</li>";
+          return;
+        }
+        j.results.forEach(function (place) {
+          var label = [place.name, place.admin1, place.country].filter(Boolean).join(", ");
+          var li = el("li", null, label + " <span class='hint'>(" + place.latitude.toFixed(2) + ", " + place.longitude.toFixed(2) + ")</span>");
+          li.addEventListener("click", function () { selectPlace(place, label); list.hidden = true; });
+          list.appendChild(li);
+        });
+      })
+      .catch(function () {
+        list.innerHTML = "<li>Lookup failed (offline?). Enter latitude/longitude manually.</li>";
+      });
+  }
+
+  function selectPlace(place, label) {
+    $("lat").value = place.latitude.toFixed(4);
+    $("lon").value = place.longitude.toFixed(4);
+    var tz = guessOffsetForZone(place.timezone, getDateFromForm());
+    if (tz !== null) $("tz").value = tz;
+    $("place-resolved").textContent = "Selected: " + label +
+      (place.timezone ? " \u00b7 " + place.timezone : "") +
+      (tz !== null ? " (UTC" + (tz >= 0 ? "+" : "") + tz + ")" : "");
+  }
+
+  // Estimate a zone's UTC offset (hours) for a given local date using Intl.
+  function guessOffsetForZone(timeZone, date) {
+    if (!timeZone || typeof Intl === "undefined") return null;
+    try {
+      var dtf = new Intl.DateTimeFormat("en-US", { timeZone: timeZone, timeZoneName: "longOffset" });
+      var parts = dtf.formatToParts(date || new Date());
+      var name = parts.find(function (p) { return p.type === "timeZoneName"; });
+      if (!name) return null;
+      var m = name.value.match(/GMT([+-])(\d{1,2})(?::(\d{2}))?/);
+      if (!m) return 0;
+      var sign = m[1] === "-" ? -1 : 1;
+      var h = parseInt(m[2], 10);
+      var min = m[3] ? parseInt(m[3], 10) : 0;
+      return sign * (h + min / 60);
+    } catch (e) { return null; }
+  }
+
+  function getDateFromForm() {
+    var dob = $("dob").value;
+    if (!dob) return new Date();
+    var parts = dob.split("-");
+    return new Date(Date.UTC(+parts[0], +parts[1] - 1, +parts[2], 12, 0, 0));
+  }
+
+  /* ----------------- Chart building ----------------- */
+  function parseForm() {
+    var dob = $("dob").value;
+    var tob = $("unknown-time").checked ? "12:00" : $("tob").value;
+    if (!dob || !tob) throw new Error("Please enter date and time of birth.");
+    var dp = dob.split("-").map(Number);
+    var tp = tob.split(":").map(Number);
+    var lat = parseFloat($("lat").value);
+    var lon = parseFloat($("lon").value);
+    var tz = parseFloat($("tz").value);
+    if (isNaN(lat) || isNaN(lon)) throw new Error("Please enter a valid latitude and longitude (or pick a city).");
+    if (isNaN(tz)) throw new Error("Please enter the UTC offset in hours (e.g. 5.5 for India).");
+    return {
+      name: $("name").value.trim(),
+      y: dp[0], mo: dp[1], d: dp[2], h: tp[0], mi: tp[1],
+      lat: lat, lon: lon, tz: tz,
+      unknownTime: $("unknown-time").checked
+    };
+  }
+
+  function buildNatal(f) {
+    var jd = core.julianDayLocal(f.y, f.mo, f.d, f.h, f.mi, f.tz);
+    return core.buildChart({ jd: jd, latDeg: f.lat, lonEast: f.lon });
+  }
+
+  function buildTransit(natal) {
+    // Current moment, same location (location only matters for transit ascendant; we
+    // report planetary transits and their gochara through natal whole-sign houses).
+    var now = new Date();
+    var jd = core.julianDayUT(now.getUTCFullYear(), now.getUTCMonth() + 1, now.getUTCDate(),
+      now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
+    var d = jd - 2451543.5;
+    var ayan = core.lahiriAyanamsa(jd);
+    var eph = window.AHS.ephemeris;
+    var trop = eph.tropicalLongitudes(d);
+    var out = {};
+    core.BODIES.forEach(function (p) {
+      out[p] = core.describe(core.toSidereal(trop[p], ayan));
+    });
+    return { when: now, planets: out, lagnaSignIndex: natal.lagnaSignIndex };
+  }
+
+  /* ----------------- Rendering ----------------- */
+  function dignityBadge(planet, signIndex) {
+    var dg = parashara.dignityOf(planet, signIndex);
+    var cls = dg === "exalted" ? "exalted" : dg === "debilitated" ? "debilitated" :
+      dg === "own sign" ? "own" : "neutral";
+    return "<span class='badge " + cls + "'>" + dg + "</span>";
+  }
+
+  function renderNatalTable(chart, f) {
+    var tbody = $("natal-table").querySelector("tbody");
+    tbody.innerHTML = "";
+    // Ascendant row
+    if (!f.unknownTime) {
+      var a = chart.ascendant;
+      var ar = el("tr", null,
+        "<td><strong>Ascendant</strong></td><td>" + a.sign + "</td><td>" + fmtDeg(a.degInSign) +
+        "</td><td>" + a.nakshatra + "</td><td>" + a.pada + "</td><td>" + a.subLord +
+        "</td><td>1</td><td>1</td><td>&mdash;</td>");
+      tbody.appendChild(ar);
+    }
+    core.BODIES.forEach(function (p) {
+      var d = chart.planets[p];
+      var tr = el("tr", null,
+        "<td>" + p + "</td><td>" + d.sign + "</td><td>" + fmtDeg(d.degInSign) +
+        "</td><td>" + d.nakshatra + "</td><td>" + d.pada + "</td><td>" + d.subLord +
+        "</td><td>" + (f.unknownTime ? "&mdash;" : d.placidusHouse) +
+        "</td><td>" + (f.unknownTime ? "&mdash;" : d.wholeSignHouse) +
+        "</td><td>" + dignityBadge(p, d.signIndex) + "</td>");
+      tbody.appendChild(tr);
+    });
+    $("chart-asc").textContent = f.unknownTime ? "(birth time unknown \u2014 houses omitted)" :
+      "Ascendant: " + chart.ascendant.sign + " " + fmtDeg(chart.ascendant.degInSign);
+  }
+
+  function renderTransits(transit, natal, f) {
+    var tbody = $("transit-table").querySelector("tbody");
+    tbody.innerHTML = "";
+    var flags = [];
+    core.BODIES.forEach(function (p) {
+      var d = transit.planets[p];
+      var gh = core.wholeSignHouse(d.signIndex, natal.lagnaSignIndex);
+      var rowCls = ([6, 8, 12].indexOf(gh) >= 0) ? "style='color:var(--amber)'" : "";
+      var tr = el("tr", null,
+        "<td " + rowCls + ">" + p + "</td><td>" + d.sign + "</td><td>" + fmtDeg(d.degInSign) +
+        "</td><td>" + d.nakshatra + "</td><td>" + d.subLord + "</td><td>" + gh + "</td>");
+      tbody.appendChild(tr);
+      if (["Saturn", "Rahu", "Ketu", "Mars"].indexOf(p) >= 0 && [6, 8, 12, 1].indexOf(gh) >= 0) {
+        flags.push(p + " is transiting your natal house " + gh +
+          (gh === 1 ? " (Ascendant/body)" : " (a health-sensitive house)") + ".");
+      }
+      // transit over natal Moon sign (Sade Sati style note for Saturn)
+      if (p === "Saturn") {
+        var moonSign = natal.planets.Moon.signIndex;
+        var diff = ((d.signIndex - moonSign + 12) % 12);
+        if (diff === 11 || diff === 0 || diff === 1) {
+          flags.push("Saturn is transiting around your natal Moon sign (Sade Sati phase) \u2014 a classically demanding period for stamina and stress.");
+        }
+      }
+    });
+    $("transit-time").textContent = "as of " + transit.when.toLocaleString();
+    var fc = $("transit-flags");
+    fc.innerHTML = flags.length ? "<h4>Transit highlights</h4>" : "";
+    flags.forEach(function (t) { fc.appendChild(el("span", "flag", t)); });
+  }
+
+  function renderFinding(f) {
+    var div = el("div", "finding " + f.severity);
+    div.appendChild(el("h4", null, f.area + " <span class='sev-tag " + f.severity + "'>" + f.severity + "</span>"));
+    div.appendChild(el("p", null, f.basis));
+    if (f.bodyParts && f.bodyParts.length) {
+      var bp = el("div", "bodyparts");
+      bp.appendChild(el("span", null, "<strong>Areas indicated:</strong> "));
+      f.bodyParts.forEach(function (b) { bp.appendChild(el("span", "chip", b)); });
+      div.appendChild(bp);
+    }
+    return div;
+  }
+
+  function renderParashara(r) {
+    var c = $("parashara-out");
+    c.innerHTML = "<h3>Parashara Health Analysis</h3>";
+    c.appendChild(el("div", "summary-box", r.summary));
+    if (r.findings.length) {
+      c.appendChild(el("h4", null, "Areas to monitor"));
+      r.findings.forEach(function (f) { c.appendChild(renderFinding(f)); });
+    }
+    if (r.supportive.length) {
+      var sup = el("div", "finding supportive");
+      sup.appendChild(el("h4", null, "Supportive factors"));
+      var ul = el("ul");
+      r.supportive.forEach(function (s) { ul.appendChild(el("li", null, s)); });
+      sup.appendChild(ul);
+      c.appendChild(sup);
+    }
+  }
+
+  function renderKP(r) {
+    var c = $("kp-out");
+    c.innerHTML = "<h3>KP (Krishnamurti Paddhati) Health Analysis</h3>";
+    c.appendChild(el("div", "summary-box", r.summary));
+
+    c.appendChild(el("h4", null, "Cuspal sub-lord verdicts"));
+    r.cuspReports.forEach(function (cr) {
+      var div = el("div", "finding " + cr.severity);
+      div.appendChild(el("h4", null, cr.label + " <span class='sev-tag " + cr.severity + "'>" + cr.severity + "</span>"));
+      div.appendChild(el("p", null, "Sub-lord: <strong>" + cr.subLord + "</strong> &middot; signifies houses [" +
+        cr.signifies.join(", ") + "]<br>" + cr.verdict + "."));
+      c.appendChild(div);
+    });
+
+    if (r.findings.length) {
+      c.appendChild(el("h4", null, "Significators of disease houses (6 / 8 / 12)"));
+      r.findings.forEach(function (f) { c.appendChild(renderFinding(f)); });
+    }
+  }
+
+  /* ----------------- Orchestration ----------------- */
+  function run(e) {
+    if (e) e.preventDefault();
+    var err = $("form-error");
+    err.hidden = true;
+    try {
+      var f = parseForm();
+      var natal = buildNatal(f);
+      var transit = buildTransit(natal);
+      var parRes = parashara.analyze(natal);
+      var kpRes = kp.analyze(natal);
+
+      $("overview-meta").textContent =
+        (f.name ? f.name + " \u2014 " : "") +
+        f.d + "/" + f.mo + "/" + f.y + " at " + pad(f.h) + ":" + pad(f.mi) +
+        " (UTC" + (f.tz >= 0 ? "+" : "") + f.tz + ") \u00b7 " +
+        f.lat.toFixed(2) + "\u00b0, " + f.lon.toFixed(2) + "\u00b0 \u00b7 Ayanamsa " + natal.ayanamsa.toFixed(3) + "\u00b0";
+      $("par-score").textContent = f.unknownTime ? "n/a*" : parRes.score;
+      $("kp-score").textContent = f.unknownTime ? "n/a*" : kpRes.score;
+
+      renderNatalTable(natal, f);
+      renderTransits(transit, natal, f);
+
+      if (f.unknownTime) {
+        $("parashara-out").innerHTML = "<h3>Parashara Health Analysis</h3><p class='hint'>House-based analysis needs a birth time. Enter the time of birth to enable the full Parashara &amp; KP screening. Planetary sign/nakshatra placements above are still valid.</p>";
+        $("kp-out").innerHTML = "<h3>KP Health Analysis</h3><p class='hint'>KP relies on house cusps, which require an accurate birth time.</p>";
+      } else {
+        renderParashara(parRes);
+        renderKP(kpRes);
+      }
+
+      $("results").hidden = false;
+      $("results").scrollIntoView({ behavior: "smooth" });
+    } catch (ex) {
+      err.textContent = ex.message || String(ex);
+      err.hidden = false;
+    }
+  }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+
+  function loadSample() {
+    $("name").value = "Sample Native";
+    $("dob").value = "1990-08-15";
+    $("tob").value = "14:30";
+    $("unknown-time").checked = false;
+    $("lat").value = "18.9600";
+    $("lon").value = "72.8200";
+    $("tz").value = "5.5";
+    $("place-resolved").textContent = "Selected: Mumbai, Maharashtra, India \u00b7 Asia/Kolkata (UTC+5.5)";
+  }
+
+  function initTabs() {
+    document.querySelectorAll(".tab").forEach(function (t) {
+      t.addEventListener("click", function () {
+        document.querySelectorAll(".tab").forEach(function (x) { x.classList.remove("active"); });
+        document.querySelectorAll(".tab-panel").forEach(function (x) { x.classList.remove("active"); });
+        t.classList.add("active");
+        $("tab-" + t.dataset.tab).classList.add("active");
+      });
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    $("birth-form").addEventListener("submit", run);
+    $("city-btn").addEventListener("click", searchCity);
+    $("city").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); searchCity(); } });
+    $("sample-btn").addEventListener("click", loadSample);
+    $("unknown-time").addEventListener("change", function () {
+      $("tob").disabled = this.checked;
+    });
+    initTabs();
+  });
+})();
+
+  </script>
 </body>
 </html>
