@@ -146,7 +146,15 @@
     return "<span class='badge " + cls + "'>" + dg + "</span>";
   }
 
-  function renderNatalTable(chart, f) {
+  function strengthCell(sb, p) {
+    if (!sb || !sb.planets[p]) return "&mdash;";
+    var s = sb.planets[p];
+    var klass = s.status === "strong" ? "low" : s.status === "moderate" ? "moderate" : "high";
+    var flags = (s.retrograde ? " \u211e" : "") + (s.combust ? " \u2609" : "");
+    return "<span class='sev-tag " + klass + "'>" + s.rupas + "</span>" + flags;
+  }
+
+  function renderNatalTable(chart, f, sb) {
     var tbody = $("natal-table").querySelector("tbody");
     tbody.innerHTML = "";
     // Ascendant row
@@ -155,7 +163,7 @@
       var ar = el("tr", null,
         "<td><strong>Ascendant</strong></td><td>" + a.sign + "</td><td>" + fmtDeg(a.degInSign) +
         "</td><td>" + a.nakshatra + "</td><td>" + a.pada + "</td><td>" + a.subLord +
-        "</td><td>1</td><td>1</td><td>&mdash;</td>");
+        "</td><td>1</td><td>1</td><td>&mdash;</td><td>&mdash;</td>");
       tbody.appendChild(ar);
     }
     core.BODIES.forEach(function (p) {
@@ -165,7 +173,8 @@
         "</td><td>" + d.nakshatra + "</td><td>" + d.pada + "</td><td>" + d.subLord +
         "</td><td>" + (f.unknownTime ? "&mdash;" : d.placidusHouse) +
         "</td><td>" + (f.unknownTime ? "&mdash;" : d.wholeSignHouse) +
-        "</td><td>" + dignityBadge(p, d.signIndex) + "</td>");
+        "</td><td>" + dignityBadge(p, d.signIndex) +
+        "</td><td>" + strengthCell(sb, p) + "</td>");
       tbody.appendChild(tr);
     });
     $("chart-asc").textContent = f.unknownTime ? "(birth time unknown \u2014 houses omitted)" :
@@ -713,7 +722,8 @@
       $("par-score").textContent = f.unknownTime ? "n/a*" : parRes.score;
       $("kp-score").textContent = f.unknownTime ? "n/a*" : kpRes.score;
 
-      renderNatalTable(natal, f);
+      var sb = f.unknownTime ? null : shadbala.compute(natal, { jd: natal.jd, latDeg: f.lat });
+      renderNatalTable(natal, f, sb);
       renderTransits(transit, natal, f);
       renderDasha(dz);
       renderDivisional(natal, d22, n64, f);
@@ -732,7 +742,6 @@
         renderParashara(parRes);
         renderKP(kpRes);
         $("d6-score").textContent = d6Res.score;
-        var sb = shadbala.compute(natal, { jd: natal.jd, latDeg: f.lat });
         fc = predict.forecast(natal, dz, { d22Lord: d22.lord, n64Lord: n64.lord }, { d6: d6chart, shadbala: shadbala.statusMap(sb) });
         var rl = $("risk-level");
         rl.textContent = fc.riskLevel;
