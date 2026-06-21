@@ -146,6 +146,20 @@
     return "<span class='badge " + cls + "'>" + dg + "</span>";
   }
 
+  function renderNativeDetails(f) {
+    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    $("nd-name").textContent = f.name || "(not provided)";
+    $("nd-dob").textContent = f.d + " " + months[f.mo - 1] + " " + f.y;
+    $("nd-tob").textContent = f.unknownTime
+      ? "Not known (12:00 assumed)"
+      : pad(f.h) + ":" + pad(f.mi) + " (local)";
+    var city = ($("city").value || "").trim();
+    var tzStr = "UTC" + (f.tz >= 0 ? "+" : "") + f.tz;
+    var coords = Math.abs(f.lat).toFixed(4) + "\u00b0" + (f.lat >= 0 ? "N" : "S") + ", " +
+      Math.abs(f.lon).toFixed(4) + "\u00b0" + (f.lon >= 0 ? "E" : "W");
+    $("nd-place").textContent = (city ? city + " \u2014 " : "") + coords + " (" + tzStr + ")";
+  }
+
   function strengthCell(sb, p) {
     if (!sb || !sb.planets[p]) return "&mdash;";
     var s = sb.planets[p];
@@ -662,12 +676,14 @@
     var results = $("results").outerHTML;
     var footer = document.querySelector(".site-footer");
     footer = footer ? footer.outerHTML : "";
+    var printFooter = document.getElementById("print-footer");
+    printFooter = printFooter ? printFooter.outerHTML : "";
 
     var nm = ($("name").value.trim() || "client").replace(/[^a-z0-9]+/gi, "-").toLowerCase();
     var docHtml = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\">" +
       "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" +
       "<title>Astrological Health Report</title><style>" + collectCss() + overrides + "</style></head><body>" +
-      header + banner + "<main class=\"wrap\">" + results + "</main>" + footer + "</body></html>";
+      header + banner + "<main class=\"wrap\">" + results + "</main>" + footer + printFooter + "</body></html>";
 
     var blob = new Blob([docHtml], { type: "text/html;charset=utf-8" });
     var url = URL.createObjectURL(blob);
@@ -723,6 +739,7 @@
       $("kp-score").textContent = f.unknownTime ? "n/a*" : kpRes.score;
 
       var sb = f.unknownTime ? null : shadbala.compute(natal, { jd: natal.jd, latDeg: f.lat });
+      renderNativeDetails(f);
       renderNatalTable(natal, f, sb);
       renderTransits(transit, natal, f);
       renderDasha(dz);

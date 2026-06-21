@@ -127,6 +127,18 @@
         <button type="button" id="download-btn" class="ghost">&#11015; Download report (HTML)</button>
         <span class="report-date" id="report-date"></span>
       </div>
+
+      <div class="card native-details" id="native-details">
+        <h2>Native Details</h2>
+        <table class="kv-table">
+          <tbody>
+            <tr><th>Name</th><td id="nd-name">&mdash;</td></tr>
+            <tr><th>Date of Birth</th><td id="nd-dob">&mdash;</td></tr>
+            <tr><th>Time of Birth</th><td id="nd-tob">&mdash;</td></tr>
+            <tr><th>Place of Birth</th><td id="nd-place">&mdash;</td></tr>
+          </tbody>
+        </table>
+      </div>
       <div class="card" id="overview-card">
         <h2>Screening Overview</h2>
         <p id="overview-meta" class="meta"></p>
@@ -365,6 +377,8 @@
       <p>For educational use only &middot; Not medical advice &middot; Built with classical Parashara &amp; KP principles.</p>
     </div>
   </footer>
+
+  <div class="print-footer" id="print-footer">Astrological Health Screener &mdash; developed by Dr. Anil Sabaji &middot; anilsabaji@gmail.com</div>
 
   <!-- Engine scripts (order matters) -->
   <script src="js/ephemeris.js"></script>
