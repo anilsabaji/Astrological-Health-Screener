@@ -16,6 +16,7 @@
   var qa = window.AHS.qa;
   var topics = window.AHS.topics;
   var kpdasha = window.AHS.kpdasha;
+  var shadbala = window.AHS.shadbala;
 
   var qaContext = null; // populated after a screening is generated
   var logoDataUrl = null; // letterhead logo, read client-side
@@ -293,6 +294,32 @@
         "<td>" + p + "</td><td>" + d3.planets[p].sign + "</td><td>" +
         (f.unknownTime ? "&mdash;" : d3.planets[p].house) + "</td>"));
     });
+  }
+
+  function renderShadbala(sb, health) {
+    var tbody = $("shadbala-table").querySelector("tbody");
+    tbody.innerHTML = "";
+    var statusClass = { strong: "low", moderate: "moderate", weak: "high" };
+    shadbala.PLANETS.forEach(function (p) {
+      var s = sb.planets[p], c = s.components;
+      var motion = s.motion + (s.retrograde ? " \u211e" : "") + (s.combust ? ", combust" : "");
+      var motionStyle = (s.retrograde || s.combust) ? " style='color:var(--red)'" : (s.motion === "slow" ? " style='color:var(--amber)'" : "");
+      tbody.appendChild(el("tr", null,
+        "<td><strong>" + p + "</strong></td>" +
+        "<td>" + c.sthana + "</td><td>" + c.dig + "</td><td>" + c.kala + "</td><td>" + c.cheshta +
+        "</td><td>" + c.naisargika + "</td><td>" + c.drik + "</td>" +
+        "<td><strong>" + s.rupas + "</strong></td><td>" + s.required + "</td>" +
+        "<td><span class='sev-tag " + statusClass[s.status] + "'>" + s.status + "</span></td>" +
+        "<td>" + s.speed + "</td><td" + motionStyle + ">" + motion + "</td><td>" + s.declination + "&deg;</td>"));
+    });
+    var c2 = $("shadbala-out");
+    c2.innerHTML = "<h3>Shadbala Health Interpretation</h3>";
+    c2.appendChild(el("div", "summary-box", health.summary));
+    if (health.findings.length) {
+      health.findings.forEach(function (f) { c2.appendChild(renderFinding(f)); });
+    } else {
+      c2.appendChild(el("p", "hint", "No planet is critically weak, combust or retrograde \u2014 functional strength is broadly adequate."));
+    }
   }
 
   function renderForecastHighlight(fc) {
@@ -700,11 +727,13 @@
         $("forecast-highlight").hidden = true;
         $("forecast-out").innerHTML = "<h3>Period Health Forecast</h3><p class='hint'>The pinpointed forecast needs a birth time (it uses houses and the 22nd-Drekkana point). The Dasha timeline and 64th-Navamsa point above are still shown.</p>";
         $("kpdasha-out").innerHTML = "<h3>KP Dasha Health Analysis</h3><p class='hint'>KP dasha analysis relies on house significators, which need an accurate birth time.</p>";
+        $("shadbala-out").innerHTML = "<h3>Shadbala</h3><p class='hint'>Shadbala uses house placement (Dig Bala, day/night, Kendradi), which needs an accurate birth time.</p>";
       } else {
         renderParashara(parRes);
         renderKP(kpRes);
         $("d6-score").textContent = d6Res.score;
-        fc = predict.forecast(natal, dz, { d22Lord: d22.lord, n64Lord: n64.lord }, { d6: d6chart });
+        var sb = shadbala.compute(natal, { jd: natal.jd, latDeg: f.lat });
+        fc = predict.forecast(natal, dz, { d22Lord: d22.lord, n64Lord: n64.lord }, { d6: d6chart, shadbala: shadbala.statusMap(sb) });
         var rl = $("risk-level");
         rl.textContent = fc.riskLevel;
         rl.className = "score-value risk-" + fc.riskClass;
@@ -713,6 +742,7 @@
         renderParaSchedule(predict.schedule(natal, qaTimeline, { d22Lord: d22.lord, n64Lord: n64.lord }, Date.now()));
         renderKPDasha(kpdasha.analyze(natal, dz));
         renderKPSchedule(kpdasha.schedule(natal, qaTimeline, Date.now()));
+        renderShadbala(sb, shadbala.healthAnalysis(sb));
       }
 
       // Enable the Ask-a-Question module with a ready context.

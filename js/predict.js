@@ -106,8 +106,16 @@
         riskScore += 2.0;
       }
 
-      c.effectiveWeight = w * amp;
+      // Shadbala: a weak/combust period lord is less able to protect; strong is resilient
+      if (extra && extra.shadbala && extra.shadbala[pname]) {
+        var sbp = extra.shadbala[pname];
+        if (sbp.weak) { amp += 0.4; c.notes.push("weak in Shadbala (" + sbp.rupas + " Rupas)"); riskScore += 1.0; }
+        else if (sbp.strong) { amp -= 0.2; c.notes.push("strong in Shadbala \u2014 resilient"); }
+        if (sbp.combust) { amp += 0.3; c.notes.push("combust"); riskScore += 0.5; }
+        if (sbp.retro) c.notes.push("retrograde");
+      }
 
+      c.effectiveWeight = w * amp;
       // --- distribute to body parts & ailments ---
       // Planetary karaka body parts lead (organ-specific); the occupied sign's
       // Kalapurusha parts are secondary (general bodily region).

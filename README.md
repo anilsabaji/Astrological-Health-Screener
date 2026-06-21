@@ -27,6 +27,10 @@ sidereal (Vedic) birth chart plus the current planetary transits, and produces a
   the houses it signifies via its star lord; 6/8/12 = adverse, 1/5/11 = recovery).
 - **Divisionals & maraka points** — D3 Drekkana chart, the **22nd Drekkana lord**
   (from Lagna) and the **64th Navamsa lord** (from Moon).
+- **Shadbala** — six-fold planetary strength (Sthana, Dig, Kala, Cheshta,
+  Naisargika, Drik) in Rupas vs the required minimum, plus each planet's **motion
+  speed, direction (retrograde), combustion and declination**; weak/combust/slow
+  planets flag the body systems most needing support, and feed the forecast.
 - **D6 Shashthamsa health chart** — the divisional dedicated to health & disease,
   with its own vulnerability analysis (D6 houses 1/6/8/12) and score.
 - **Period Health Forecast** — synthesises dasha lords + maraka points + KP
@@ -75,6 +79,7 @@ js/
   dasha.js            Vimshottari Maha/Antar/Pratyantar dasha + current periods
   kp-dasha.js         KP analysis of the running dasha for health (significators)
   d6.js               D6 Shashthamsa (health/disease) chart analysis
+  shadbala.js         Shadbala strength + speed/direction/declination, health read
   health-topics.js    health-question knowledge base + keyword classifier
   qa.js               natural-language question engine (likelihood, organ, timing)
   predict.js          synthesis -> pinpoints weakest body part & probable issue

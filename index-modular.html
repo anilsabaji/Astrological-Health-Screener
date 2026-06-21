@@ -160,6 +160,7 @@
         <button class="tab" data-tab="dasha">Dasha &amp; Forecast</button>
         <button class="tab" data-tab="kpdasha">KP Dasha</button>
         <button class="tab" data-tab="d6">D6 Health</button>
+        <button class="tab" data-tab="shadbala">Shadbala</button>
         <button class="tab" data-tab="divisional">Divisionals (D3)</button>
       </nav>
 
@@ -312,6 +313,22 @@
         <div class="card" id="d6-out"></div>
       </div>
 
+      <div class="tab-panel" id="tab-shadbala">
+        <div class="card">
+          <h3>Shadbala &mdash; Six-fold Planetary Strength <span class="sub">with motion, direction &amp; declination</span></h3>
+          <div class="table-scroll">
+            <table class="data-table" id="shadbala-table">
+              <thead>
+                <tr><th>Planet</th><th>Sthana</th><th>Dig</th><th>Kala</th><th>Cheshta</th><th>Naisargika</th><th>Drik</th><th>Total (Rupas)</th><th>Req.</th><th>Status</th><th>Speed &deg;/day</th><th>Motion</th><th>Decl.</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="hint">Total in Rupas (60 Virupas = 1 Rupa) vs the classical required strength. A planet below requirement, combust, retrograde or slow is functionally weaker. Some Kala sub-balas are approximated; declination assumes ~0 latitude.</p>
+        </div>
+        <div class="card" id="shadbala-out"></div>
+      </div>
+
       <div class="tab-panel" id="tab-divisional">
         <div class="card">
           <h3>Longevity / Maraka points</h3>
@@ -358,6 +375,7 @@
   <script src="js/varga.js"></script>
   <script src="js/dasha.js"></script>
   <script src="js/d6.js"></script>
+  <script src="js/shadbala.js"></script>
   <script src="js/kp-dasha.js"></script>
   <script src="js/health-topics.js"></script>
   <script src="js/qa.js"></script>
