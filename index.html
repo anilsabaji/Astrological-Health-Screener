@@ -37,6 +37,7 @@ body {
 .site-header h1 { margin: 0; font-size: 2rem; letter-spacing: .5px; color: var(--gold); }
 .tagline { margin: 8px 0 0; color: var(--muted); }
 .tagline strong { color: var(--indigo); }
+.usage-counter { margin: 8px 0 0; color: var(--gold); font-size: .82rem; opacity: .85; }
 
 .disclaimer-banner {
   background: rgba(239,106,106,.12);
@@ -276,7 +277,7 @@ button.ghost { background: transparent; }
   /* Hide interactive / input-only chrome */
   #form-card, .tabs, .report-actions, .actions,
   .city-search, .city-results, #qa-examples, .qa-examples,
-  #qa-btn, #qa-input { display: none !important; }
+  #qa-btn, #qa-input, .usage-counter { display: none !important; }
 
   /* Show every tab panel as one continuous report */
   .tab-panel { display: block !important; page-break-inside: auto; }
@@ -301,6 +302,7 @@ button.ghost { background: transparent; }
     <div class="wrap">
       <h1>&#10024; Astrological Health Screener</h1>
       <p class="tagline">Vedic health analysis using <strong>Parashara</strong> &amp; <strong>Krishnamurti Paddhati (KP)</strong>, with live planetary transits.</p>
+      <p class="usage-counter" id="usage-counter"></p>
     </div>
   </header>
 
@@ -3935,6 +3937,26 @@ button.ghost { background: transparent; }
     });
   }
 
+  // ---- Per-device usage counter (localStorage) ----
+  var USAGE_KEY = "ahs_usage_count";
+  function readUsage() {
+    try { return parseInt(localStorage.getItem(USAGE_KEY) || "0", 10) || 0; } catch (e) { return null; }
+  }
+  function showUsage(n) {
+    if (n === undefined) n = readUsage();
+    var el = $("usage-counter");
+    if (!el) return;
+    if (n === null) { el.textContent = "Usage counter unavailable (private browsing)."; return; }
+    el.textContent = "Screenings generated on this device: " + n.toLocaleString();
+  }
+  function bumpUsage() {
+    var n = readUsage();
+    if (n === null) return;
+    n += 1;
+    try { localStorage.setItem(USAGE_KEY, String(n)); } catch (e) { }
+    showUsage(n);
+  }
+
   function printReport() {
     if ($("results").hidden) {
       alert("Please generate the screening first, then print.");
@@ -3976,7 +3998,7 @@ button.ghost { background: transparent; }
     renderLetterhead();
 
     var overrides = "\n/* report export overrides */\n" +
-      "#form-card,.tabs,.report-actions,.qa-examples,#qa-input,#qa-btn,.city-search,.city-results{display:none!important}\n" +
+      "#form-card,.tabs,.report-actions,.qa-examples,#qa-input,#qa-btn,.city-search,.city-results,.usage-counter{display:none!important}\n" +
       "#results{display:block!important}\n.tab-panel{display:block!important}\n" +
       "body{background:#0e1020}\n" +
       "*{-webkit-print-color-adjust:exact;print-color-adjust:exact}\n";
@@ -4092,6 +4114,7 @@ button.ghost { background: transparent; }
 
       $("results").hidden = false;
       $("results").scrollIntoView({ behavior: "smooth" });
+      bumpUsage();
     } catch (ex) {
       err.textContent = ex.message || String(ex);
       err.hidden = false;
@@ -4142,6 +4165,7 @@ button.ghost { background: transparent; }
       $("tob").disabled = this.checked;
     });
     initTabs();
+    showUsage();
   });
 })();
 

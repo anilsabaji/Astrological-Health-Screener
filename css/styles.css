@@ -30,6 +30,7 @@ body {
 .site-header h1 { margin: 0; font-size: 2rem; letter-spacing: .5px; color: var(--gold); }
 .tagline { margin: 8px 0 0; color: var(--muted); }
 .tagline strong { color: var(--indigo); }
+.usage-counter { margin: 8px 0 0; color: var(--gold); font-size: .82rem; opacity: .85; }
 
 .disclaimer-banner {
   background: rgba(239,106,106,.12);
@@ -269,7 +270,7 @@ button.ghost { background: transparent; }
   /* Hide interactive / input-only chrome */
   #form-card, .tabs, .report-actions, .actions,
   .city-search, .city-results, #qa-examples, .qa-examples,
-  #qa-btn, #qa-input { display: none !important; }
+  #qa-btn, #qa-input, .usage-counter { display: none !important; }
 
   /* Show every tab panel as one continuous report */
   .tab-panel { display: block !important; page-break-inside: auto; }

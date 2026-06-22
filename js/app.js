@@ -624,6 +624,26 @@
     });
   }
 
+  // ---- Per-device usage counter (localStorage) ----
+  var USAGE_KEY = "ahs_usage_count";
+  function readUsage() {
+    try { return parseInt(localStorage.getItem(USAGE_KEY) || "0", 10) || 0; } catch (e) { return null; }
+  }
+  function showUsage(n) {
+    if (n === undefined) n = readUsage();
+    var el = $("usage-counter");
+    if (!el) return;
+    if (n === null) { el.textContent = "Usage counter unavailable (private browsing)."; return; }
+    el.textContent = "Screenings generated on this device: " + n.toLocaleString();
+  }
+  function bumpUsage() {
+    var n = readUsage();
+    if (n === null) return;
+    n += 1;
+    try { localStorage.setItem(USAGE_KEY, String(n)); } catch (e) { }
+    showUsage(n);
+  }
+
   function printReport() {
     if ($("results").hidden) {
       alert("Please generate the screening first, then print.");
@@ -665,7 +685,7 @@
     renderLetterhead();
 
     var overrides = "\n/* report export overrides */\n" +
-      "#form-card,.tabs,.report-actions,.qa-examples,#qa-input,#qa-btn,.city-search,.city-results{display:none!important}\n" +
+      "#form-card,.tabs,.report-actions,.qa-examples,#qa-input,#qa-btn,.city-search,.city-results,.usage-counter{display:none!important}\n" +
       "#results{display:block!important}\n.tab-panel{display:block!important}\n" +
       "body{background:#0e1020}\n" +
       "*{-webkit-print-color-adjust:exact;print-color-adjust:exact}\n";
@@ -781,6 +801,7 @@
 
       $("results").hidden = false;
       $("results").scrollIntoView({ behavior: "smooth" });
+      bumpUsage();
     } catch (ex) {
       err.textContent = ex.message || String(ex);
       err.hidden = false;
@@ -831,5 +852,6 @@
       $("tob").disabled = this.checked;
     });
     initTabs();
+    showUsage();
   });
 })();
