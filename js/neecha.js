@@ -80,14 +80,26 @@
       if (exaltLord && parashara.dignityOf(exaltLord, chart.planets[exaltLord].signIndex) === "exalted")
         reasons.push(exaltLord + " is exalted");
 
-      if (d9 && d9.planets[p].signIndex === EXALT_SIGN[p])
-        reasons.push("attains exaltation in the Navamsa (D9)");
+      // ---- Navamsa (D9) based cancellation ----
+      var d9sign = d9 ? d9.planets[p].signIndex : null;
+      var d9dig = d9 ? parashara.dignityOf(p, d9sign) : "n/a";
+      if (d9) {
+        if (d9dig === "exalted") reasons.push("attains exaltation in the Navamsa (D9)");
+        else if (d9dig === "own sign") reasons.push("occupies its own sign in the Navamsa (D9)");
+        if (d9sign === chart.planets[p].signIndex)
+          reasons.push("is Vargottama (same sign in D1 & D9) \u2014 a strengthening factor");
+        var dispD9 = parashara.dignityOf(dispositor, d9.planets[dispositor].signIndex);
+        if (dispD9 === "exalted" || dispD9 === "own sign")
+          reasons.push("dispositor " + dispositor + " is " + dispD9 + " in the Navamsa");
+      }
 
       results.push({
         planet: p,
         debilSign: core.SIGNS[debilSign],
         dispositor: dispositor,
         exaltLord: exaltLord,
+        navamsaSign: d9 ? core.SIGNS[d9sign] : null,
+        navamsaDignity: d9dig,
         cancelled: reasons.length > 0,
         reasons: reasons,
         bodyParts: (data.PLANET_BODY[p] || []).slice(0, 3)

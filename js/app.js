@@ -255,6 +255,10 @@
       div.appendChild(el("h4", null, r.planet + " debilitated in " + r.debilSign +
         " <span class='sev-tag " + (r.cancelled ? "low" : "high") + "'>" +
         (r.cancelled ? "cancelled" : "not cancelled") + "</span>"));
+      if (r.navamsaSign) {
+        div.appendChild(el("p", "hint", "Navamsa (D9): " + r.navamsaSign +
+          (r.navamsaDignity && r.navamsaDignity !== "neutral" && r.navamsaDignity !== "n/a" ? " (" + r.navamsaDignity + ")" : "")));
+      }
       if (r.cancelled) {
         var ul = el("ul");
         r.reasons.forEach(function (x) { ul.appendChild(el("li", null, x)); });
