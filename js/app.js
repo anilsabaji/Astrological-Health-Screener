@@ -150,18 +150,37 @@
   var BODY_ABBR = { Sun: "Su", Moon: "Mo", Mars: "Ma", Mercury: "Me", Jupiter: "Ju", Venus: "Ve", Saturn: "Sa", Rahu: "Ra", Ketu: "Ke" };
   // South Indian fixed sign positions [gridRow, gridColumn] (1-indexed), signs 0..11
   var SIC_POS = [[1, 2], [1, 3], [1, 4], [2, 4], [3, 4], [4, 4], [4, 3], [4, 2], [4, 1], [3, 1], [2, 1], [1, 1]];
+  var chartFormat = "south";
+  var lastCharts = null; // {natal, d9, d3, d6}
 
-  // Build a South Indian chart element. occupants = array[12] of label arrays.
-  function southIndianChart(title, occupants, lagnaSign) {
+  // Unified chart data: by sign (South Indian) and by house (North Indian).
+  function chartData(asc, planetsObj) {
+    var lagna = asc.signIndex;
+    var bySign = []; for (var i = 0; i < 12; i++) bySign.push([]);
+    var byHouse = {}; for (var h = 1; h <= 12; h++) byHouse[h] = { signNum: ((lagna + h - 1) % 12) + 1, items: [] };
+    function add(signIndex, abbr, d) {
+      var hh = ((signIndex - lagna + 12) % 12) + 1;
+      var item = { abbr: abbr, deg: Math.floor(d) };
+      bySign[signIndex].push(item); byHouse[hh].items.push(item);
+    }
+    add(lagna, "As", asc.degInSign);
+    core.BODIES.forEach(function (p) { add(planetsObj[p].signIndex, BODY_ABBR[p], planetsObj[p].degInSign); });
+    return { lagnaSign: lagna, bySign: bySign, byHouse: byHouse };
+  }
+
+  function southIndianChart(title, cd) {
     var wrap = el("div", "south-chart-wrap");
     wrap.appendChild(el("div", "south-chart-title", title));
     var grid = el("div", "south-chart");
     for (var s = 0; s < 12; s++) {
-      var cell = el("div", "sic-cell" + (s === lagnaSign ? " lagna" : ""));
+      var cell = el("div", "sic-cell" + (s === cd.lagnaSign ? " lagna" : ""));
       cell.style.gridRow = String(SIC_POS[s][0]);
       cell.style.gridColumn = String(SIC_POS[s][1]);
+      var bodies = cd.bySign[s].map(function (it) {
+        return it.abbr + " <span class='sic-deg'>" + it.deg + "&deg;</span>";
+      }).join("<br>");
       cell.innerHTML = "<span class='sic-sign'>" + core.SIGNS[s].slice(0, 3) + "</span>" +
-        "<span class='sic-bodies'>" + (occupants[s].join("<br>") || "") + "</span>";
+        "<span class='sic-bodies'>" + bodies + "</span>";
       grid.appendChild(cell);
     }
     var center = el("div", "sic-center", title);
@@ -170,26 +189,58 @@
     return wrap;
   }
 
-  function occupantsFromVarga(vchart) {
-    var occ = []; for (var i = 0; i < 12; i++) occ.push([]);
-    core.BODIES.forEach(function (p) { occ[vchart.planets[p].signIndex].push(BODY_ABBR[p]); });
-    return occ;
+  // North Indian (diamond) chart as inline SVG.
+  var NIC_CENTROID = {
+    1: [50, 27], 2: [25, 12], 3: [12, 25], 4: [27, 50], 5: [12, 75], 6: [25, 88],
+    7: [50, 73], 8: [75, 88], 9: [88, 75], 10: [73, 50], 11: [88, 25], 12: [75, 12]
+  };
+  function northIndianChart(title, cd) {
+    var wrap = el("div", "north-chart-wrap");
+    wrap.appendChild(el("div", "south-chart-title", title));
+    var COL = "#e0a83c";
+    var svg = "<svg viewBox='0 0 100 100' class='north-chart'>";
+    svg += "<rect x='1' y='1' width='98' height='98' fill='none' stroke='" + COL + "' stroke-width='0.8'/>";
+    svg += "<line x1='1' y1='1' x2='99' y2='99' stroke='" + COL + "' stroke-width='0.5'/>";
+    svg += "<line x1='99' y1='1' x2='1' y2='99' stroke='" + COL + "' stroke-width='0.5'/>";
+    svg += "<polygon points='50,1 99,50 50,99 1,50' fill='none' stroke='" + COL + "' stroke-width='0.5'/>";
+    for (var h = 1; h <= 12; h++) {
+      var c = NIC_CENTROID[h], sd = cd.byHouse[h];
+      var n = sd.items.length;
+      svg += "<text x='" + c[0] + "' y='" + (c[1] - n * 2.2) + "' text-anchor='middle' font-size='4.4' fill='#e9ecf8'>";
+      svg += "<tspan x='" + c[0] + "' font-size='3.4' fill='#7c83f7'>" + sd.signNum + "</tspan>";
+      sd.items.forEach(function (it) {
+        svg += "<tspan x='" + c[0] + "' dy='4.6'>" + it.abbr + " " + it.deg + "&#176;</tspan>";
+      });
+      svg += "</text>";
+    }
+    svg += "</svg>";
+    var box = el("div"); box.innerHTML = svg;
+    wrap.appendChild(box.firstChild);
+    return wrap;
+  }
+
+  function buildAllCharts() {
+    if (!lastCharts) return;
+    var grid = $("charts-grid");
+    grid.innerHTML = "";
+    var maker = chartFormat === "north" ? northIndianChart : southIndianChart;
+    var n = lastCharts.natal;
+    grid.appendChild(maker("D1 Rasi", chartData({ signIndex: n.ascendant.signIndex, degInSign: n.ascendant.degInSign }, n.planets)));
+    grid.appendChild(maker("D9 Navamsa", chartData({ signIndex: lastCharts.d9.lagnaSignIndex, degInSign: lastCharts.d9.lagnaDeg }, lastCharts.d9.planets)));
+    grid.appendChild(maker("D3 Drekkana", chartData({ signIndex: lastCharts.d3.lagnaSignIndex, degInSign: lastCharts.d3.lagnaDeg }, lastCharts.d3.planets)));
+    grid.appendChild(maker("D6 Shashthamsa", chartData({ signIndex: lastCharts.d6.lagnaSignIndex, degInSign: lastCharts.d6.lagnaDeg }, lastCharts.d6.planets)));
   }
 
   function renderCharts(natal, d9, d3, d6) {
-    var grid = $("charts-grid");
-    grid.innerHTML = "";
-    function deg(d) { return "<span class='sic-deg'>" + Math.floor(d) + "&deg;</span>"; }
-    // D1 Rasi: planets (with degrees) by sign + Ascendant
-    var occ1 = []; for (var i = 0; i < 12; i++) occ1.push([]);
-    occ1[natal.ascendant.signIndex].push("As " + deg(natal.ascendant.degInSign));
-    core.BODIES.forEach(function (p) {
-      occ1[natal.planets[p].signIndex].push(BODY_ABBR[p] + " " + deg(natal.planets[p].degInSign));
-    });
-    grid.appendChild(southIndianChart("D1 Rasi", occ1, natal.ascendant.signIndex));
-    grid.appendChild(southIndianChart("D9 Navamsa", occupantsFromVarga(d9), d9.lagnaSignIndex));
-    grid.appendChild(southIndianChart("D3 Drekkana", occupantsFromVarga(d3), d3.lagnaSignIndex));
-    grid.appendChild(southIndianChart("D6 Shashthamsa", occupantsFromVarga(d6), d6.lagnaSignIndex));
+    lastCharts = { natal: natal, d9: d9, d3: d3, d6: d6 };
+    buildAllCharts();
+  }
+
+  function setChartFormat(fmt) {
+    chartFormat = fmt;
+    var sBtn = $("fmt-south"), nBtn = $("fmt-north");
+    if (sBtn && nBtn) { sBtn.classList.toggle("active", fmt === "south"); nBtn.classList.toggle("active", fmt === "north"); }
+    buildAllCharts();
   }
 
   function renderNeecha(results) {
@@ -760,7 +811,7 @@
     renderLetterhead();
 
     var overrides = "\n/* report export overrides */\n" +
-      "#form-card,.tabs,.report-actions,.qa-examples,#qa-input,#qa-btn,.city-search,.city-results,.usage-counter{display:none!important}\n" +
+      "#form-card,.tabs,.report-actions,.qa-examples,#qa-input,#qa-btn,.city-search,.city-results,.usage-counter,.chart-fmt-toggle{display:none!important}\n" +
       "#results{display:block!important}\n.tab-panel{display:block!important}\n" +
       "body{background:#0e1020}\n" +
       "*{-webkit-print-color-adjust:exact;print-color-adjust:exact}\n";
@@ -920,6 +971,8 @@
     $("qa-input").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); askQuestion(); } });
     renderQAExamples();
     $("print-btn").addEventListener("click", printReport);
+    $("fmt-south").addEventListener("click", function () { setChartFormat("south"); });
+    $("fmt-north").addEventListener("click", function () { setChartFormat("north"); });
     $("download-btn").addEventListener("click", downloadReport);
     $("lh-logo").addEventListener("change", function (e) {
       var file = e.target.files && e.target.files[0];

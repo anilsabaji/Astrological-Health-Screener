@@ -264,6 +264,16 @@ button.ghost { background: transparent; }
 .sic-cell.lagna { background: rgba(242,196,109,.16); }
 .sic-cell.lagna::after { content: "La"; position: absolute; top: 2px; right: 3px; font-size: .55rem; color: var(--gold); font-weight: 700; }
 .sic-center { grid-column: 2 / 4; grid-row: 2 / 4; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--indigo); font-weight: 700; font-size: .8rem; border: 1px solid var(--line); }
+
+/* North Indian chart */
+.north-chart-wrap { text-align: center; }
+.north-chart { width: 100%; height: auto; aspect-ratio: 1 / 1; background: var(--bg-2); border: 1px solid var(--line); border-radius: 4px; }
+
+/* Chart format toggle */
+.chart-fmt-toggle { float: right; }
+.fmt-btn { font-size: .75rem; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--muted); }
+.fmt-btn.active { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+
 @media (max-width: 680px) { .charts-grid { grid-template-columns: 1fr; } }
 
 /* ============ PRINT / SAVE-AS-PDF (vibrant colour) ============ */
@@ -287,7 +297,7 @@ button.ghost { background: transparent; }
   /* Hide interactive / input-only chrome */
   #form-card, .tabs, .report-actions, .actions,
   .city-search, .city-results, #qa-examples, .qa-examples,
-  #qa-btn, #qa-input, .usage-counter { display: none !important; }
+  #qa-btn, #qa-input, .usage-counter, .chart-fmt-toggle { display: none !important; }
 
   /* Show every tab panel as one continuous report */
   .tab-panel { display: block !important; page-break-inside: auto; }

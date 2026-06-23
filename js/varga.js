@@ -34,6 +34,12 @@
     return Math.floor(rev(lon) / (30 / 9)) % 12;
   }
 
+  // Position (0-30 deg) within a varga sign, for division D (D3=3, D6=6, D9=9...).
+  function vargaDeg(degInSign, D) {
+    var span = 30 / D;
+    return ((degInSign % span) / span) * 30;
+  }
+
   /*
    * D6 Shashthamsa sign. Each sign is divided into six 5-degree parts.
    * BPHS rule: in ODD signs the parts are reckoned from Aries; in EVEN signs
@@ -84,12 +90,14 @@
       var d = chart.planets[p];
       var s = drekkanaSign(d.signIndex, d.degInSign);
       planets[p] = {
-        signIndex: s,
-        sign: core.SIGNS[s],
+        signIndex: s, sign: core.SIGNS[s], degInSign: vargaDeg(d.degInSign, 3),
         house: ((s - lagnaD3 + 12) % 12) + 1
       };
     });
-    return { lagnaSignIndex: lagnaD3, lagnaSign: core.SIGNS[lagnaD3], planets: planets };
+    return {
+      lagnaSignIndex: lagnaD3, lagnaSign: core.SIGNS[lagnaD3],
+      lagnaDeg: vargaDeg(chart.ascendant.degInSign, 3), planets: planets
+    };
   }
 
   /*
@@ -103,12 +111,14 @@
       var d = chart.planets[p];
       var s = shashthamsaSign(d.signIndex, d.degInSign);
       planets[p] = {
-        signIndex: s,
-        sign: core.SIGNS[s],
+        signIndex: s, sign: core.SIGNS[s], degInSign: vargaDeg(d.degInSign, 6),
         house: ((s - lagnaD6 + 12) % 12) + 1
       };
     });
-    return { lagnaSignIndex: lagnaD6, lagnaSign: core.SIGNS[lagnaD6], planets: planets };
+    return {
+      lagnaSignIndex: lagnaD6, lagnaSign: core.SIGNS[lagnaD6],
+      lagnaDeg: vargaDeg(chart.ascendant.degInSign, 6), planets: planets
+    };
   }
 
   /*
@@ -119,9 +129,15 @@
     var planets = {};
     core.BODIES.forEach(function (p) {
       var s = navamsaSign(chart.planets[p].lon);
-      planets[p] = { signIndex: s, sign: core.SIGNS[s], house: ((s - lagna + 12) % 12) + 1 };
+      planets[p] = {
+        signIndex: s, sign: core.SIGNS[s], degInSign: vargaDeg(chart.planets[p].degInSign, 9),
+        house: ((s - lagna + 12) % 12) + 1
+      };
     });
-    return { lagnaSignIndex: lagna, lagnaSign: core.SIGNS[lagna], planets: planets };
+    return {
+      lagnaSignIndex: lagna, lagnaSign: core.SIGNS[lagna],
+      lagnaDeg: vargaDeg(chart.ascendant.degInSign, 9), planets: planets
+    };
   }
 
   var api = {
