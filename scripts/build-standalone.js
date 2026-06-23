@@ -19,7 +19,7 @@ const css = fs.readFileSync(root + "css/styles.css", "utf8");
 // Load order matters (engine deps first, app.js last).
 const jsFiles = [
   "js/ephemeris.js", "js/astro-core.js", "js/data.js", "js/parashara.js",
-  "js/kp.js", "js/varga.js", "js/dasha.js", "js/d6.js", "js/shadbala.js", "js/kp-dasha.js", "js/health-topics.js", "js/qa.js", "js/predict.js", "js/app.js"
+  "js/kp.js", "js/varga.js", "js/neecha.js", "js/dasha.js", "js/d6.js", "js/shadbala.js", "js/kp-dasha.js", "js/health-topics.js", "js/qa.js", "js/predict.js", "js/app.js"
 ];
 const js = jsFiles.map(function (f) {
   return "/* ===== " + f + " ===== */\n" + fs.readFileSync(root + f, "utf8");

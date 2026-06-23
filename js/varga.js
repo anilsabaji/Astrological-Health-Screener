@@ -111,6 +111,19 @@
     return { lagnaSignIndex: lagnaD6, lagnaSign: core.SIGNS[lagnaD6], planets: planets };
   }
 
+  /*
+   * Build a D9 Navamsa chart from a rasi chart.
+   */
+  function buildD9(chart) {
+    var lagna = navamsaSign(chart.ascendant.lon);
+    var planets = {};
+    core.BODIES.forEach(function (p) {
+      var s = navamsaSign(chart.planets[p].lon);
+      planets[p] = { signIndex: s, sign: core.SIGNS[s], house: ((s - lagna + 12) % 12) + 1 };
+    });
+    return { lagnaSignIndex: lagna, lagnaSign: core.SIGNS[lagna], planets: planets };
+  }
+
   var api = {
     drekkanaSign: drekkanaSign,
     navamsaSign: navamsaSign,
@@ -118,7 +131,8 @@
     drekkana22: drekkana22,
     navamsa64: navamsa64,
     buildD3: buildD3,
-    buildD6: buildD6
+    buildD6: buildD6,
+    buildD9: buildD9
   };
   root.AHS = root.AHS || {};
   root.AHS.varga = api;

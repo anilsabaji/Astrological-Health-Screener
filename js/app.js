@@ -17,6 +17,7 @@
   var topics = window.AHS.topics;
   var kpdasha = window.AHS.kpdasha;
   var shadbala = window.AHS.shadbala;
+  var neecha = window.AHS.neecha;
 
   var qaContext = null; // populated after a screening is generated
   var logoDataUrl = null; // letterhead logo, read client-side
@@ -144,6 +145,77 @@
     var cls = dg === "exalted" ? "exalted" : dg === "debilitated" ? "debilitated" :
       dg === "own sign" ? "own" : "neutral";
     return "<span class='badge " + cls + "'>" + dg + "</span>";
+  }
+
+  var BODY_ABBR = { Sun: "Su", Moon: "Mo", Mars: "Ma", Mercury: "Me", Jupiter: "Ju", Venus: "Ve", Saturn: "Sa", Rahu: "Ra", Ketu: "Ke" };
+  // South Indian fixed sign positions [gridRow, gridColumn] (1-indexed), signs 0..11
+  var SIC_POS = [[1, 2], [1, 3], [1, 4], [2, 4], [3, 4], [4, 4], [4, 3], [4, 2], [4, 1], [3, 1], [2, 1], [1, 1]];
+
+  // Build a South Indian chart element. occupants = array[12] of label arrays.
+  function southIndianChart(title, occupants, lagnaSign) {
+    var wrap = el("div", "south-chart-wrap");
+    wrap.appendChild(el("div", "south-chart-title", title));
+    var grid = el("div", "south-chart");
+    for (var s = 0; s < 12; s++) {
+      var cell = el("div", "sic-cell" + (s === lagnaSign ? " lagna" : ""));
+      cell.style.gridRow = String(SIC_POS[s][0]);
+      cell.style.gridColumn = String(SIC_POS[s][1]);
+      cell.innerHTML = "<span class='sic-sign'>" + core.SIGNS[s].slice(0, 3) + "</span>" +
+        "<span class='sic-bodies'>" + (occupants[s].join(" ") || "") + "</span>";
+      grid.appendChild(cell);
+    }
+    var center = el("div", "sic-center", title);
+    grid.appendChild(center);
+    wrap.appendChild(grid);
+    return wrap;
+  }
+
+  function occupantsFromVarga(vchart) {
+    var occ = []; for (var i = 0; i < 12; i++) occ.push([]);
+    core.BODIES.forEach(function (p) { occ[vchart.planets[p].signIndex].push(BODY_ABBR[p]); });
+    return occ;
+  }
+
+  function renderCharts(natal, d9, d3, d6) {
+    var grid = $("charts-grid");
+    grid.innerHTML = "";
+    // D1 Rasi: planets by sign + Ascendant
+    var occ1 = []; for (var i = 0; i < 12; i++) occ1.push([]);
+    occ1[natal.ascendant.signIndex].push("As");
+    core.BODIES.forEach(function (p) { occ1[natal.planets[p].signIndex].push(BODY_ABBR[p]); });
+    grid.appendChild(southIndianChart("D1 Rasi", occ1, natal.ascendant.signIndex));
+    grid.appendChild(southIndianChart("D9 Navamsa", occupantsFromVarga(d9), d9.lagnaSignIndex));
+    grid.appendChild(southIndianChart("D3 Drekkana", occupantsFromVarga(d3), d3.lagnaSignIndex));
+    grid.appendChild(southIndianChart("D6 Shashthamsa", occupantsFromVarga(d6), d6.lagnaSignIndex));
+  }
+
+  function renderNeecha(results) {
+    var c = $("neecha-out");
+    c.innerHTML = "<h3>Debilitation &amp; Neecha Bhanga (cancellation)</h3>";
+    if (!results.length) {
+      c.appendChild(el("p", "hint", "No planet is debilitated in the D1 Rasi chart."));
+      return;
+    }
+    results.forEach(function (r) {
+      var div = el("div", "finding " + (r.cancelled ? "low" : "moderate"));
+      div.appendChild(el("h4", null, r.planet + " debilitated in " + r.debilSign +
+        " <span class='sev-tag " + (r.cancelled ? "low" : "high") + "'>" +
+        (r.cancelled ? "cancelled" : "not cancelled") + "</span>"));
+      if (r.cancelled) {
+        var ul = el("ul");
+        r.reasons.forEach(function (x) { ul.appendChild(el("li", null, x)); });
+        div.appendChild(el("p", null, "Neecha Bhanga applies &mdash; the debility is largely neutralised (and can act as a strength):"));
+        div.appendChild(ul);
+      } else {
+        div.appendChild(el("p", null, "No cancellation found. The organs/functions governed by " + r.planet +
+          " may lack vitality and need extra care."));
+        var bp = el("div", "bodyparts");
+        bp.appendChild(el("span", null, "<strong>Areas to watch:</strong> "));
+        r.bodyParts.forEach(function (b) { bp.appendChild(el("span", "chip", b)); });
+        div.appendChild(bp);
+      }
+      c.appendChild(div);
+    });
   }
 
   function renderNativeDetails(f) {
@@ -759,8 +831,13 @@
       $("kp-score").textContent = f.unknownTime ? "n/a*" : kpRes.score;
 
       var sb = f.unknownTime ? null : shadbala.compute(natal, { jd: natal.jd, latDeg: f.lat });
+      var d9chart = varga.buildD9(natal);
+      var d3chart = varga.buildD3(natal);
+      var neechaRes = neecha.analyze(natal, d9chart);
       renderNativeDetails(f);
+      renderCharts(natal, d9chart, d3chart, d6chart);
       renderNatalTable(natal, f, sb);
+      renderNeecha(neechaRes);
       renderTransits(transit, natal, f);
       renderDasha(dz);
       renderDivisional(natal, d22, n64, f);
@@ -779,7 +856,7 @@
         renderParashara(parRes);
         renderKP(kpRes);
         $("d6-score").textContent = d6Res.score;
-        fc = predict.forecast(natal, dz, { d22Lord: d22.lord, n64Lord: n64.lord }, { d6: d6chart, shadbala: shadbala.statusMap(sb) });
+        fc = predict.forecast(natal, dz, { d22Lord: d22.lord, n64Lord: n64.lord }, { d6: d6chart, shadbala: shadbala.statusMap(sb), neechaCancelled: neecha.cancelledSet(neechaRes) });
         var rl = $("risk-level");
         rl.textContent = fc.riskLevel;
         rl.className = "score-value risk-" + fc.riskClass;

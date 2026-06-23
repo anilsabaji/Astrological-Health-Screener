@@ -95,7 +95,11 @@
       }
       // dignity
       var dig = pl ? parashara.dignityOf(pname, signIndex) : "neutral";
-      if (dig === "debilitated") { amp += 0.4; c.notes.push("debilitated in " + core.SIGNS[signIndex]); riskScore += 1.0; }
+      if (dig === "debilitated") {
+        if (extra && extra.neechaCancelled && extra.neechaCancelled.indexOf(pname) >= 0) {
+          c.notes.push("debilitated but cancelled (Neecha Bhanga)");
+        } else { amp += 0.4; c.notes.push("debilitated in " + core.SIGNS[signIndex]); riskScore += 1.0; }
+      }
       else if (dig === "exalted" || dig === "own sign") { amp -= 0.15; c.notes.push("dignified (" + dig + "), partly protective"); }
       // maraka convergence (lord serves a dasha role AND a maraka role)
       var isDashaRole = c.roles.some(function (r) { return /Dasha/.test(r); });

@@ -249,6 +249,22 @@ button.ghost { background: transparent; }
 /* Every-page developer footnote (print only) */
 .print-footer { display: none; }
 
+/* South Indian charts */
+.charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+.south-chart-wrap { text-align: center; }
+.south-chart-title { color: var(--gold); font-weight: 600; margin-bottom: 6px; font-size: .95rem; }
+.south-chart {
+  display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr);
+  aspect-ratio: 1 / 1; border: 2px solid var(--gold); background: var(--bg-2);
+}
+.sic-cell { border: 1px solid var(--line); padding: 3px 4px; position: relative; overflow: hidden; min-height: 0; }
+.sic-cell .sic-sign { display: block; font-size: .6rem; color: var(--muted); }
+.sic-cell .sic-bodies { display: block; font-size: .72rem; color: var(--text); font-weight: 600; line-height: 1.25; }
+.sic-cell.lagna { background: rgba(242,196,109,.16); }
+.sic-cell.lagna::after { content: "La"; position: absolute; top: 2px; right: 3px; font-size: .55rem; color: var(--gold); font-weight: 700; }
+.sic-center { grid-column: 2 / 4; grid-row: 2 / 4; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--indigo); font-weight: 700; font-size: .8rem; border: 1px solid var(--line); }
+@media (max-width: 680px) { .charts-grid { grid-template-columns: 1fr; } }
+
 /* ============ PRINT / SAVE-AS-PDF (vibrant colour) ============ */
 @media print {
   @page { margin: 12mm 10mm 18mm; }
