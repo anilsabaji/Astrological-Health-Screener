@@ -267,6 +267,7 @@ button.ghost { background: transparent; }
 .sic-cell { border: 1px solid var(--line); padding: 3px 4px; position: relative; overflow: hidden; min-height: 0; }
 .sic-cell .sic-sign { display: block; font-size: .6rem; color: var(--muted); }
 .sic-cell .sic-bodies { display: block; font-size: .72rem; color: var(--text); font-weight: 600; line-height: 1.25; }
+.sic-cell .sic-deg { color: var(--muted); font-size: .58rem; font-weight: 400; }
 .sic-cell.lagna { background: rgba(242,196,109,.16); }
 .sic-cell.lagna::after { content: "La"; position: absolute; top: 2px; right: 3px; font-size: .55rem; color: var(--gold); font-weight: 700; }
 .sic-center { grid-column: 2 / 4; grid-row: 2 / 4; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--indigo); font-weight: 700; font-size: .8rem; border: 1px solid var(--line); }
@@ -309,6 +310,15 @@ button.ghost { background: transparent; }
 
   /* Major sections start on a fresh page */
   #tab-chart, #tab-parashara, #tab-kp, #tab-dasha, #tab-d6, #tab-divisional { page-break-before: always; }
+
+  /* Compact single-row charts in the printed report */
+  #charts-card { page-break-inside: avoid; }
+  .charts-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 6px !important; }
+  .south-chart-title { font-size: 7pt; }
+  .sic-cell .sic-bodies { font-size: 6pt; line-height: 1.1; }
+  .sic-cell .sic-sign { font-size: 5pt; }
+  .sic-cell .sic-deg { font-size: 5pt; }
+  .sic-center { font-size: 6pt; }
 }
 
   </style>
@@ -3626,7 +3636,7 @@ button.ghost { background: transparent; }
       cell.style.gridRow = String(SIC_POS[s][0]);
       cell.style.gridColumn = String(SIC_POS[s][1]);
       cell.innerHTML = "<span class='sic-sign'>" + core.SIGNS[s].slice(0, 3) + "</span>" +
-        "<span class='sic-bodies'>" + (occupants[s].join(" ") || "") + "</span>";
+        "<span class='sic-bodies'>" + (occupants[s].join("<br>") || "") + "</span>";
       grid.appendChild(cell);
     }
     var center = el("div", "sic-center", title);
@@ -3644,10 +3654,13 @@ button.ghost { background: transparent; }
   function renderCharts(natal, d9, d3, d6) {
     var grid = $("charts-grid");
     grid.innerHTML = "";
-    // D1 Rasi: planets by sign + Ascendant
+    function deg(d) { return "<span class='sic-deg'>" + Math.floor(d) + "&deg;</span>"; }
+    // D1 Rasi: planets (with degrees) by sign + Ascendant
     var occ1 = []; for (var i = 0; i < 12; i++) occ1.push([]);
-    occ1[natal.ascendant.signIndex].push("As");
-    core.BODIES.forEach(function (p) { occ1[natal.planets[p].signIndex].push(BODY_ABBR[p]); });
+    occ1[natal.ascendant.signIndex].push("As " + deg(natal.ascendant.degInSign));
+    core.BODIES.forEach(function (p) {
+      occ1[natal.planets[p].signIndex].push(BODY_ABBR[p] + " " + deg(natal.planets[p].degInSign));
+    });
     grid.appendChild(southIndianChart("D1 Rasi", occ1, natal.ascendant.signIndex));
     grid.appendChild(southIndianChart("D9 Navamsa", occupantsFromVarga(d9), d9.lagnaSignIndex));
     grid.appendChild(southIndianChart("D3 Drekkana", occupantsFromVarga(d3), d3.lagnaSignIndex));

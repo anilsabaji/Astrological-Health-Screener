@@ -161,7 +161,7 @@
       cell.style.gridRow = String(SIC_POS[s][0]);
       cell.style.gridColumn = String(SIC_POS[s][1]);
       cell.innerHTML = "<span class='sic-sign'>" + core.SIGNS[s].slice(0, 3) + "</span>" +
-        "<span class='sic-bodies'>" + (occupants[s].join(" ") || "") + "</span>";
+        "<span class='sic-bodies'>" + (occupants[s].join("<br>") || "") + "</span>";
       grid.appendChild(cell);
     }
     var center = el("div", "sic-center", title);
@@ -179,10 +179,13 @@
   function renderCharts(natal, d9, d3, d6) {
     var grid = $("charts-grid");
     grid.innerHTML = "";
-    // D1 Rasi: planets by sign + Ascendant
+    function deg(d) { return "<span class='sic-deg'>" + Math.floor(d) + "&deg;</span>"; }
+    // D1 Rasi: planets (with degrees) by sign + Ascendant
     var occ1 = []; for (var i = 0; i < 12; i++) occ1.push([]);
-    occ1[natal.ascendant.signIndex].push("As");
-    core.BODIES.forEach(function (p) { occ1[natal.planets[p].signIndex].push(BODY_ABBR[p]); });
+    occ1[natal.ascendant.signIndex].push("As " + deg(natal.ascendant.degInSign));
+    core.BODIES.forEach(function (p) {
+      occ1[natal.planets[p].signIndex].push(BODY_ABBR[p] + " " + deg(natal.planets[p].degInSign));
+    });
     grid.appendChild(southIndianChart("D1 Rasi", occ1, natal.ascendant.signIndex));
     grid.appendChild(southIndianChart("D9 Navamsa", occupantsFromVarga(d9), d9.lagnaSignIndex));
     grid.appendChild(southIndianChart("D3 Drekkana", occupantsFromVarga(d3), d3.lagnaSignIndex));
