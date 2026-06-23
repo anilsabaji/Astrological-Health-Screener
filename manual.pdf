@@ -1,0 +1,352 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R] /Count 6 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 5666 >>
+stream
+q 0.12 0.12 0.42 rg BT /F2 16 Tf 56.00 769.89 Td (1. Introduction) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 744.89 Td (The Astrological Health Screener computes a sidereal \(Vedic\) birth chart together with current transits, and) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 731.89 Td (produces a rule-based health assessment from multiple classical systems: Parashara, Krishnamurti Paddhati \(KP\),) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 718.89 Td (the D6 Shashthamsa divisional, Shadbala strength, Vimshottari dasha timing, and a natural-language question) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 705.89 Td (module. This manual documents every parameter the tool uses and exactly how each one influences the) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 692.89 Td (assessment, including the numeric weights and thresholds.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 675.89 Td (IMPORTANT: This is an educational and self-reflection tool based on classical astrological significations. It is NOT) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 662.89 Td (medical advice and does not diagnose, treat, or predict any medical condition. All outputs are astrological) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 649.89 Td (indications and risk-sensitive periods only. Always consult a qualified healthcare professional.) Tj ET Q
+q 0.12 0.12 0.42 rg BT /F2 16 Tf 56.00 624.89 Td (2. Inputs) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 598.89 Td (Name) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 585.39 Td (Optional label, shown on the report's Native Details page.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 567.89 Td (Date of Birth) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 554.39 Td (Gregorian date. Used to compute the Julian Day.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 536.89 Td (Time of Birth) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 523.39 Td (Local 24h time. Required for houses, Ascendant, Placidus cusps, Shadbala day/night, and all house-based) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 510.89 Td (analysis. If unknown, 12:00 is assumed and house-dependent results are skipped.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 493.39 Td (Place of Birth) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 479.89 Td (Latitude \(N positive\) and Longitude \(E positive\). Used for the Ascendant, house cusps and Dig Bala. A city) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 467.39 Td (search can auto-fill these via a public geocoding lookup.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 449.89 Td (UTC offset) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 436.39 Td (Hours east of UTC \(e.g. +5.5 for India\). Converts local birth time to Universal Time. Confirm daylight saving for) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 423.89 Td (the birth date/region.) Tj ET Q
+q 0.12 0.12 0.42 rg BT /F2 16 Tf 56.00 399.39 Td (3. Astronomical engine) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 374.39 Td (Planetary positions use a compact analytical ephemeris \(Paul Schlyter's method\) with the major perturbation terms) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 361.39 Td (for the Moon and for Jupiter/Saturn. Accuracy is within a few arc-minutes - sufficient for sign, nakshatra and KP) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 348.39 Td (sub-division boundaries.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 330.39 Td (Julian Day) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 316.89 Td (Local civil time minus the UTC offset gives Universal Time, converted to a Julian Day for all calculations.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 299.39 Td (Ayanamsa \(Lahiri / Chitrapaksha\)) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 285.89 Td (The precessional offset subtracted from tropical longitudes to obtain sidereal \(Vedic\) longitudes. ~24 degrees in) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 273.39 Td (this era, increasing ~50.3 arc-seconds per year.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 255.89 Td (Obliquity of the ecliptic) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 242.39 Td (Used to convert ecliptic longitude to right ascension and declination.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 224.89 Td (Ascendant \(Lagna\)) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 211.39 Td (The rising sidereal degree on the eastern horizon, from RAMC, latitude and obliquity. Defines the 1st house.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 193.89 Td (Placidus cusps) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 180.39 Td (Twelve house cusps by semi-arc trisection - required for KP cuspal sub-lord analysis. Reduced to equal) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 167.89 Td (right-ascension division at the equator and verified monotonic at mid-latitudes.) Tj ET Q
+q 0.12 0.12 0.42 rg BT /F2 16 Tf 56.00 143.39 Td (4. Core placements) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 117.39 Td (Rasi \(sign\) and degree) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 103.89 Td (The sidereal sign \(1 of 12\) and degrees within it. The basis of dignity, body-part mapping and divisional charts.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 86.39 Td (Nakshatra and pada) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 72.89 Td (1 of 27 lunar mansions \(13 deg 20' each\) and its quarter \(pada\). The nakshatra lord drives the Vimshottari) Tj ET Q
+q 0.45 0.45 0.45 rg BT /F1 7.5 Tf 120.92 34 Td (Astrological Health Screener  -  Technical Manual   |   developed by Dr. Anil Sabaji \(anilsabaji@gmail.com\)) Tj ET Q
+q 0.45 0.45 0.45 rg BT /F1 7.5 Tf 500.92 34 Td (Page 1 of 6) Tj ET Q
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 5742 >>
+stream
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 781.89 Td (dasha and KP significations.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 764.39 Td (KP sub-lord) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 750.89 Td (Each nakshatra is sub-divided into nine unequal Vimshottari-proportion parts starting from the star lord. The) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 738.39 Td (sub-lord is the decisive significator in KP.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 720.89 Td (Whole-sign houses \(Parashara\)) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 707.39 Td (House = sign offset from the Lagna sign + 1. Used by the Parashara engine.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 689.89 Td (Placidus houses \(KP\)) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 676.39 Td (House determined by which cusp interval a body falls in. Used by the KP engine.) Tj ET Q
+q 0.12 0.12 0.42 rg BT /F2 16 Tf 56.00 651.89 Td (5. Dignity, debilitation and Neecha Bhanga) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 625.89 Td (Dignity) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 612.39 Td (Exalted, own sign, debilitated or neutral, from each planet's exaltation/debilitation/own signs. Exalted/own) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 599.89 Td (strengthens the organs a planet governs; debilitated weakens them.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 582.39 Td (Debilitation \(Neecha\)) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 568.89 Td (A planet in its debilitation sign in the D1 Rasi chart is functionally weak for the systems it governs - unless) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 556.39 Td (cancelled.) Tj ET Q
+q 0.2 0.2 0.55 rg BT /F2 10.5 Tf 56.00 537.89 Td (Neecha Bhanga \(cancellation\) conditions - Rasi) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 521.89 Td (-  The dispositor \(lord of the debilitation sign\) is in a kendra \(1/4/7/10\) from the Lagna or the Moon.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 507.39 Td (-  The planet exalted in that sign is in a kendra from the Lagna or the Moon.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 492.89 Td (-  The debilitated planet is conjunct or aspected by its dispositor.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 478.39 Td (-  The debilitated planet is conjunct or aspected by the planet exalted there.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 463.89 Td (-  The dispositor or that exalted planet is itself exalted.) Tj ET Q
+q 0.2 0.2 0.55 rg BT /F2 10.5 Tf 56.00 445.39 Td (Neecha Bhanga conditions - Navamsa \(D9\)) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 429.39 Td (-  The debilitated planet attains exaltation in the Navamsa.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 414.89 Td (-  The debilitated planet occupies its own sign in the Navamsa.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 400.39 Td (-  The debilitated planet is Vargottama \(same sign in D1 and D9\) - a strengthening factor.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 385.89 Td (-  The dispositor is exalted or in its own sign in the Navamsa.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 369.39 Td (Impact: a debilitation WITHOUT cancellation is reported as a vulnerability and adds risk in the forecast; a) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 356.39 Td (CANCELLED debilitation is largely neutralised \(and may act as a strength\), so the forecast does not penalise it.) Tj ET Q
+q 0.12 0.12 0.42 rg BT /F2 16 Tf 56.00 331.39 Td (6. Shadbala \(six-fold strength\)) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 306.39 Td (Shadbala measures how capable each of the seven planets is of delivering \(and protecting\) the matters it governs.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 293.39 Td (Values are in Virupas; 60 Virupas = 1 Rupa. Each planet's total is compared with a classical required minimum.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 275.39 Td (Sthana Bala) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 261.89 Td (Positional strength: Uchcha \(distance from debilitation\), Saptavargaja \(divisional dignity\), Ojayugma \(odd/even) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 249.39 Td (sign\), Kendradi \(angular 60 / succedent 30 / cadent 15\), and Drekkana strength.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 231.89 Td (Dig Bala) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 218.39 Td (Directional strength: distance from the planet's powerless point \(Sun/Mars strong in the 10th, Jupiter/Mercury in) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 205.89 Td (the 1st, Moon/Venus in the 4th, Saturn in the 7th\).) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 188.39 Td (Kala Bala) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 174.89 Td (Temporal strength: Nathonnatha \(day/night\), Paksha \(Moon-Sun elongation\), and Ayana \(declination-based\).) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 157.39 Td (Cheshta Bala) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 143.89 Td (Motional strength. Sun uses its Ayana bala, Moon its Paksha bala; others derive from actual speed vs mean) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 131.39 Td (motion \(retrograde = strong\).) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 113.89 Td (Naisargika Bala) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 100.39 Td (Fixed natural strength: Sun 60, Moon 51.4, Venus 42.9, Jupiter 34.3, Mercury 25.7, Mars 17.1, Saturn 8.6) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 87.89 Td (Virupas.) Tj ET Q
+q 0.45 0.45 0.45 rg BT /F1 7.5 Tf 120.92 34 Td (Astrological Health Screener  -  Technical Manual   |   developed by Dr. Anil Sabaji \(anilsabaji@gmail.com\)) Tj ET Q
+q 0.45 0.45 0.45 rg BT /F1 7.5 Tf 500.92 34 Td (Page 2 of 6) Tj ET Q
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 5528 >>
+stream
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 781.89 Td (Drik Bala) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 768.39 Td (Aspectual strength: benefic aspects add, malefic aspects subtract.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 750.89 Td (Required strength \(Rupas\)) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 737.39 Td (Sun 5, Moon 6, Mars 5, Mercury 7, Jupiter 6.5, Venus 5.5, Saturn 5. Below this = weak; within 80-100% =) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 724.89 Td (moderate; at/above = strong.) Tj ET Q
+q 0.2 0.2 0.55 rg BT /F2 10.5 Tf 56.00 706.39 Td (Motion, direction and declination) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 687.39 Td (Speed and motion) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 673.89 Td (Daily motion \(deg/day\). Slow or stationary planets are functionally altered.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 656.39 Td (Retrograde) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 642.89 Td (A planet moving backward \(not Sun/Moon\). Flagged with the retrograde symbol; intensifies and can make its) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 630.39 Td (significations erratic.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 612.89 Td (Combustion) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 599.39 Td (Within the Sun's orb \(Moon 12, Mars 17, Mercury 12, Jupiter 11, Venus 9, Saturn 15 degrees\). Weakens the) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 586.89 Td (planet's significations.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 569.39 Td (Declination) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 555.89 Td (Angular distance from the celestial equator; the basis of Ayana Bala \(north strengthens) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 543.39 Td (Sun/Mars/Jupiter/Venus/Mercury; south strengthens Moon/Saturn\).) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 526.89 Td (Impact: a weak, combust, retrograde or slow planet flags the body systems it governs as needing support. In the) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 513.89 Td (period forecast, a weak period-lord adds risk \(+0.4 weight, combust +0.3\), while a strong one is treated as resilient) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 500.89 Td (\(-0.2\).) Tj ET Q
+q 0.12 0.12 0.42 rg BT /F2 16 Tf 56.00 475.89 Td (7. Divisional charts and Khara \(maraka\) points) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 449.89 Td (D1 Rasi) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 436.39 Td (The main birth chart; everything, including the physical body \(1st house\).) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 418.89 Td (D9 Navamsa) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 405.39 Td (Inner strength and dignity; central to debilitation-cancellation and Shadbala.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 387.89 Td (D3 Drekkana) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 374.39 Td (Each sign in three 10-degree parts \(1st = same sign, 2nd = 5th, 3rd = 9th\); constitution/longevity context.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 356.89 Td (D6 Shashthamsa) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 343.39 Td (Each sign in six 5-degree parts \(odd signs from Aries, even from Libra\). The divisional dedicated to HEALTH) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 330.89 Td (and DISEASE.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 313.39 Td (22nd Drekkana lord \(from Lagna\)) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 299.89 Td (A Khara \(cause-of-affliction\) point: the drekkana 21 places ahead of the Lagna's, landing in the 8th sign at the) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 287.39 Td (same ordinal.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 269.89 Td (64th Navamsa lord \(from the Moon\)) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 256.39 Td (Another Khara/maraka point: the navamsa sign 63 places ahead of the Moon's navamsa \(i.e. the 4th navamsa) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 243.89 Td (sign onward\).) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 227.39 Td (Impact: when a dasha period-lord coincides with a maraka lord, the forecast raises the period's sensitivity.) Tj ET Q
+q 0.12 0.12 0.42 rg BT /F2 16 Tf 56.00 202.39 Td (8. Health significations \(reference data\)) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 176.39 Td (Planet -> body parts) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 162.89 Td (Karaka organs/systems, e.g. Sun: heart, bones, vitality; Moon: mind, fluids, stomach; Mars: blood, muscles;) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 150.39 Td (Mercury: nerves, skin; Jupiter: liver, fat; Venus: kidneys, reproductive; Saturn: bones, joints, chronic; Rahu/Ketu:) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 137.89 Td (nervous/mysterious, surgery.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 120.39 Td (Planet -> ailments) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 106.89 Td (Tendencies linked to each planet \(e.g. Saturn: chronic, arthritic, degenerative; Mars: inflammation, accidents\).) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 89.39 Td (Sign -> body \(Kalapurusha\)) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 75.89 Td (Head \(Aries\) to feet \(Pisces\) mapped to the twelve signs; also used for house body regions.) Tj ET Q
+q 0.45 0.45 0.45 rg BT /F1 7.5 Tf 120.92 34 Td (Astrological Health Screener  -  Technical Manual   |   developed by Dr. Anil Sabaji \(anilsabaji@gmail.com\)) Tj ET Q
+q 0.45 0.45 0.45 rg BT /F1 7.5 Tf 500.92 34 Td (Page 3 of 6) Tj ET Q
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 12 0 R >>
+endobj
+12 0 obj
+<< /Length 5870 >>
+stream
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 781.89 Td (House health meaning) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 768.39 Td (1 body/vitality, 6 disease, 8 chronic/surgery/longevity, 11 cure/recovery, 12 hospitalisation, etc.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 750.89 Td (KP house groups) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 737.39 Td (Disease houses 6/8/12 \(adverse\); recovery houses 1/5/11 \(supportive\). Maraka houses 2/7.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 719.89 Td (Natural benefic/malefic) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 706.39 Td (Jupiter, Venus, Mercury, \(waxing\) Moon are benefic; Sun, Mars, Saturn, Rahu, Ketu malefic. Affects affliction) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 693.89 Td (and aspect scoring.) Tj ET Q
+q 0.12 0.12 0.42 rg BT /F2 16 Tf 56.00 669.39 Td (9. Parashara health engine) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 644.39 Td (Whole-sign analysis producing a vitality index \(0-100, baseline 70\). Factors and their score impact:) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 629.39 Td (-  Lagna lord in a dusthana \(6/8/12\): -12 and a constitution finding; in a kendra/trikona: +6.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 614.89 Td (-  Lagna lord debilitated: -8; exalted/own: +6.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 600.39 Td (-  Malefics in or aspecting the Ascendant: -4 each; body parts of those malefics + the Lagna sign are flagged.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 585.89 Td (-  6th house \(disease\) occupied/its lord in dusthana: -6. 8th house \(chronic\): -7. 12th house: -4.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 571.39 Td (-  Moon afflicted or in dusthana \(mind/emotions\): -5.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 556.89 Td (-  Any debilitated planet: -3 and its systems flagged.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 540.39 Td (The index is banded as robust \(>=75\), generally good \(>=60\), moderate \(>=45\) or delicate \(<45\).) Tj ET Q
+q 0.12 0.12 0.42 rg BT /F2 16 Tf 56.00 515.39 Td (10. KP \(Krishnamurti Paddhati\) health engine) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 490.39 Td (A planet delivers the houses it SIGNIFIES, chiefly via its star \(nakshatra\) lord, then by occupation/ownership.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 477.39 Td (Health index baseline 70.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 459.39 Td (Cuspal sub-lords) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 445.89 Td (The sub-lord of the 1st cusp \(body\), 6th \(disease\), 8th \(chronic\) and 12th \(hospitalisation\) cusps is examined. If) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 433.39 Td (the 1st sub-lord signifies 6/8/12 \(and not 1/5/11\) health is vulnerable \(-10\); leaning to 1/5/11 supports health) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 420.89 Td (\(+6\). For 6/8/12 cusps, a sub-lord signifying disease houses means that matter can manifest \(8th -8, others -5\).) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 403.39 Td (Significators of 6/8/12) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 389.89 Td (Planets that signify the disease houses \(four-fold: occupant's star, occupant, owner's star, owner\). Their) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 377.39 Td (governed organs are linked to disease and listed.) Tj ET Q
+q 0.12 0.12 0.42 rg BT /F2 16 Tf 56.00 352.89 Td (11. D6 Shashthamsa health engine) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 327.89 Td (Reads the health-specific houses within the D6 chart \(baseline 70\):) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 312.89 Td (-  D6 Lagna lord in a D6 dusthana: -10 \(weak disease-resistance\).) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 298.39 Td (-  Malefics on D6 1/6/8/12: -4 to -6 each; their organs flagged. Benefics on D6 1/6: +3 \(recuperation\).) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 281.89 Td (Produces a D6 health index banded strong / reasonably stable / guarded / fragile.) Tj ET Q
+q 0.12 0.12 0.42 rg BT /F2 16 Tf 56.00 256.89 Td (12. Vimshottari dasha and timing) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 231.89 Td (The 120-year Vimshottari cycle starts from the Moon's nakshatra lord, with the balance proportional to the) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 218.89 Td (unelapsed nakshatra. Maha \(MD\), Antar \(AD\) and Pratyantar \(PD\) sub-periods follow the standard order and) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 205.89 Td (proportions \(365.25-day year\).) Tj ET Q
+q 0.2 0.2 0.55 rg BT /F2 10.5 Tf 56.00 186.89 Td (KP dasha health reading) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 170.89 Td (-  Each running lord is classified by the houses it signifies: 6/8/12 with no recovery link = Adverse; with 1/5/11 =) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 158.39 Td (Mixed; only 1/5/11 = Supportive.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 143.89 Td (-  The joint MD/AD/PD verdict flags health-sensitive periods. Upcoming Antar Dashas where both the Maha and) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 131.39 Td (Antar lords signify disease houses are listed as adverse windows.) Tj ET Q
+q 0.2 0.2 0.55 rg BT /F2 10.5 Tf 56.00 112.89 Td (Parashara dasha schedule) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 96.89 Td (-  Each lord scored for adverse factors \(dusthana placement/ownership, 2nd/7th maraka-house lordship,) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 84.39 Td (debilitation, being a 22nd-Drekkana or 64th-Navamsa lord\) vs supportive factors \(kendra/trikona, exaltation/own,) Tj ET Q
+q 0.45 0.45 0.45 rg BT /F1 7.5 Tf 120.92 34 Td (Astrological Health Screener  -  Technical Manual   |   developed by Dr. Anil Sabaji \(anilsabaji@gmail.com\)) Tj ET Q
+q 0.45 0.45 0.45 rg BT /F1 7.5 Tf 500.92 34 Td (Page 4 of 6) Tj ET Q
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 14 0 R >>
+endobj
+14 0 obj
+<< /Length 5805 >>
+stream
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 781.89 Td (benefic nature\).) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 767.39 Td (-  Upcoming Maha, Antar and Pratyantar periods are listed with a verdict, and adverse Antar Dashas are flagged) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 754.89 Td (as sensitive windows.) Tj ET Q
+q 0.12 0.12 0.42 rg BT /F2 16 Tf 56.00 730.39 Td (13. Period health forecast \(synthesis\)) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 705.39 Td (Combines the current MD/AD/PD with the maraka and strength factors to pinpoint the most vulnerable body part) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 692.39 Td (and the most probable issue, with a risk rating. Contributor base weights:) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 677.39 Td (-  Maha Dasha lord 3.0; Antar 2.2; Pratyantar 1.6; 64th-Navamsa lord 2.0; 22nd-Drekkana lord 2.0 \(weights of a) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 664.89 Td (planet in multiple roles add up\).) Tj ET Q
+q 0.2 0.2 0.55 rg BT /F2 10.5 Tf 56.00 646.39 Td (Amplifiers \(multiply a contributor's weight\)) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 630.39 Td (-  KP significator of a disease house: +0.5 \(and +1.2 risk per role\).) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 615.89 Td (-  Whole-sign dusthana placement: +0.4. Debilitated \(uncancelled\): +0.4. Cancelled debilitation: no penalty.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 601.39 Td (-  Running-period lord that is also a maraka point: +0.6 \(heightened sensitivity\).) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 586.89 Td (-  Shadbala weak: +0.4; combust: +0.3; strong: -0.2.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 572.39 Td (-  Occupies the D6 6th \(disease\): +1.3 role; D6 8th: +1.1 role.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 554.89 Td (Body-part synthesis) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 541.39 Td (Each contributor's weight is distributed to its karaka organs \(primary x1.4\) and the Kalapurusha parts of the sign) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 528.89 Td (it occupies \(x0.5\); the highest-scoring areas are the 'most vulnerable'. Ailments are tallied likewise.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 511.39 Td (Risk bands) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 497.89 Td (Risk score >=6 Elevated, >=3 Moderate, else Lower.) Tj ET Q
+q 0.12 0.12 0.42 rg BT /F2 16 Tf 56.00 473.39 Td (14. Ask-a-Question module) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 448.39 Td (A free-text question is classified into a health topic \(heart, cancer, diabetes, kidney, liver, mental, accident, BP,) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 435.39 Td (respiratory, joints, skin, digestive, eye, reproductive, thyroid, neuro, infection, or general\). Each topic defines its) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 422.39 Td (karaka planets, houses, malefic triggers and body parts.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 404.39 Td (Predisposition score) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 390.89 Td (Sums affliction of the topic's karakas and houses: KP signifies 6 \(+1.5\) / 8 \(+0.8\) / 12 \(+0.4\); dusthana) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 378.39 Td (placement +1.2; debilitation +1.5; malefic conjunction +0.5; D6 6th +1.2 / 8th +0.8; maraka lord +1.0 to 1.2;) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 365.89 Td (house malefic occupants and adverse cuspal sub-lords add too.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 348.39 Td (Likelihood bands) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 334.89 Td (Total >=10 High predisposition; >=7 Elevated; >=4.5 Moderate; >=2.5 Mild; else Low. At or above 4.5 the) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 322.39 Td (answer is 'positive' and shows the organ and timing.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 304.89 Td (Organ pinpointing) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 291.39 Td (For named topics the stated organ leads; for open-ended ones \(cancer/general\) the organ is derived from the) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 278.89 Td (most afflicted karaka and house.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 261.39 Td (Timing) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 247.89 Td (Upcoming Antar Dashas \(next ~45 years\) whose Maha/Antar lords are topic-relevant and malefic are scored;) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 235.39 Td (the earliest strong window is refined to its Pratyantar sub-period. Output is a sensitive window, never a) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 222.89 Td (deterministic event.) Tj ET Q
+q 0.12 0.12 0.42 rg BT /F2 16 Tf 56.00 198.39 Td (15. Transits \(Gochara\)) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 173.39 Td (Current sidereal positions of all bodies are mapped through the natal whole-sign houses. Transits of Saturn, Rahu,) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 160.39 Td (Ketu and Mars over the natal Ascendant or houses 6/8/12, and Saturn around the natal Moon \(Sade Sati\), are) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 147.39 Td (flagged as health-relevant timing.) Tj ET Q
+q 0.12 0.12 0.42 rg BT /F2 16 Tf 56.00 122.39 Td (16. Reading the indices) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 96.39 Td (Parashara vitality index / KP health index / D6 health index) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 82.89 Td (0-100; higher is better. They use different methods, so differences are expected; convergence across them is) Tj ET Q
+q 0.45 0.45 0.45 rg BT /F1 7.5 Tf 120.92 34 Td (Astrological Health Screener  -  Technical Manual   |   developed by Dr. Anil Sabaji \(anilsabaji@gmail.com\)) Tj ET Q
+q 0.45 0.45 0.45 rg BT /F1 7.5 Tf 500.92 34 Td (Page 5 of 6) Tj ET Q
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 16 0 R >>
+endobj
+16 0 obj
+<< /Length 3278 >>
+stream
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 781.89 Td (the stronger signal.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 764.39 Td (Current-period risk) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 750.89 Td (Lower / Moderate / Elevated for the running dasha, from the synthesis.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 733.39 Td (Shadbala \(Rupas\)) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 719.89 Td (Per-planet strength vs requirement; shown with retrograde/combust markers in the birth chart.) Tj ET Q
+q 0.12 0.12 0.42 rg BT /F2 16 Tf 56.00 695.39 Td (17. Accuracy and limitations) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 672.39 Td (-  Positions are accurate to a few arc-minutes - ample for signs, nakshatras and sub-lords, but not a) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 659.89 Td (Swiss-Ephemeris-grade tool.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 645.39 Td (-  Some Shadbala sub-balas \(Tribhaga, year/month/day/hour lords, Yuddha\) and the full seven-varga) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 632.89 Td (Saptavargaja are approximated; declination assumes ~0 ecliptic latitude. Results are reliable for the) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 620.39 Td (strong/weak classification used here.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 605.89 Td (-  Interpretations are deterministic summaries of classical rules, not the judgement of an experienced astrologer,) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 593.39 Td (and never a medical diagnosis.) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 56.00 578.89 Td (-  Daylight-saving handling depends on the UTC offset entered.) Tj ET Q
+q 0.12 0.12 0.42 rg BT /F2 16 Tf 56.00 554.39 Td (18. Glossary) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 528.39 Td (Lagna) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 514.89 Td (Ascendant - the rising sign/degree.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 497.39 Td (Dusthana) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 483.89 Td (Houses 6, 8, 12 \(difficulty/disease\).) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 466.39 Td (Kendra / Trikona) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 452.89 Td (Angular houses 1/4/7/10 / trines 1/5/9.) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 435.39 Td (Karaka) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 421.89 Td (Significator \(planet representing a matter or organ\).) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 404.39 Td (Maraka / Khara) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 390.89 Td (Death-/affliction-inflicting points and house lords \(2nd, 7th, and the 22nd-Drekkana / 64th-Navamsa lords\).) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 373.39 Td (Vargottama) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 359.89 Td (Same sign in the Rasi \(D1\) and Navamsa \(D9\).) Tj ET Q
+q 0.55 0.4 0.05 rg BT /F2 9.5 Tf 56.00 342.39 Td (Dasha / Bhukti) Tj ET Q
+q 0.12 0.12 0.12 rg BT /F1 9.5 Tf 68.00 328.89 Td (Planetary period / sub-period in the Vimshottari system.) Tj ET Q
+q 0.45 0.45 0.45 rg BT /F1 7.5 Tf 120.92 34 Td (Astrological Health Screener  -  Technical Manual   |   developed by Dr. Anil Sabaji \(anilsabaji@gmail.com\)) Tj ET Q
+q 0.45 0.45 0.45 rg BT /F1 7.5 Tf 500.92 34 Td (Page 6 of 6) Tj ET Q
+endstream
+endobj
+17 0 obj
+<< /Title (Astrological Health Screener - Technical Manual) /Author (Dr. Anil Sabaji) >>
+endobj
+xref
+0 18
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000148 00000 n 
+0000000218 00000 n 
+0000000293 00000 n 
+0000000435 00000 n 
+0000006153 00000 n 
+0000006295 00000 n 
+0000012089 00000 n 
+0000012232 00000 n 
+0000017813 00000 n 
+0000017957 00000 n 
+0000023880 00000 n 
+0000024024 00000 n 
+0000029882 00000 n 
+0000030026 00000 n 
+0000033357 00000 n 
+trailer
+<< /Size 18 /Root 1 0 R /Info 17 0 R >>
+startxref
+33462
+%%EOF
