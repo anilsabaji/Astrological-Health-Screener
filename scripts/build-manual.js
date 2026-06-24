@@ -152,21 +152,25 @@ var BLOCKS = [
   param("Organ pinpointing", "For named topics the stated organ leads; for open-ended ones (cancer/general) the organ is derived from the most afflicted karaka and house."),
   param("Timing", "Upcoming Antar Dashas (next ~45 years) whose Maha/Antar lords are topic-relevant and malefic are scored; the earliest strong window is refined to its Pratyantar sub-period. Output is a sensitive window, never a deterministic event."),
 
-  h1("15. Transits (Gochara)"),
+  h1("15. Accident and injury risk"),
+  p("A dedicated module evaluates accident-proneness as a natal PROMISE, then times it. Promise factors: Mars linked (conjunction/aspect) with Rahu (+2.5), Ketu (+2.5) or Saturn (+2.2); Mars in a dusthana (+1.5); Rahu/Ketu in houses 1/4/8 (+1.2); malefics in the 8th (+1.0 each) or 6th (+0.8 each); Mars/Saturn/Rahu/Ketu afflicting the Ascendant or its lord; malefics in the 4th (vehicles, +0.8 - vehicular risk); the 8th lord in a dusthana; D6 Mars/Rahu/Ketu in houses 1/6/8; and a malefic 8th cuspal sub-lord signifying disease houses."),
+  p("Levels: index >=7 High, >=4.5 Elevated, >=2.5 Moderate, else Low. The likely nature is inferred (falls/fractures from Saturn links; cuts/burns/surgery from Mars-Rahu/Ketu; vehicular from a 4th-house affliction; poisoning/electrical from Rahu/Ketu in the 8th). Triggers: dasha periods whose Maha and Antar lords are both accident-significators (Mars/Rahu/Ketu/Saturn or the 6th/8th lords) are listed as accident-sensitive windows, and current Mars/Saturn/Rahu/Ketu transits over natal houses 1/4/6/8 are flagged."),
+
+  h1("16. Transits (Gochara)"),
   p("Current sidereal positions of all bodies are mapped through the natal whole-sign houses. Transits of Saturn, Rahu, Ketu and Mars over the natal Ascendant or houses 6/8/12, and Saturn around the natal Moon (Sade Sati), are flagged as health-relevant timing."),
 
-  h1("16. Reading the indices"),
+  h1("17. Reading the indices"),
   param("Parashara vitality index / KP health index / D6 health index", "0-100; higher is better. They use different methods, so differences are expected; convergence across them is the stronger signal."),
   param("Current-period risk", "Lower / Moderate / Elevated for the running dasha, from the synthesis."),
   param("Shadbala (Rupas)", "Per-planet strength vs requirement; shown with retrograde/combust markers in the birth chart."),
 
-  h1("17. Accuracy and limitations"),
+  h1("18. Accuracy and limitations"),
   li("Positions are accurate to a few arc-minutes - ample for signs, nakshatras and sub-lords, but not a Swiss-Ephemeris-grade tool."),
   li("Some Shadbala sub-balas (Tribhaga, year/month/day/hour lords, Yuddha) and the full seven-varga Saptavargaja are approximated; declination assumes ~0 ecliptic latitude. Results are reliable for the strong/weak classification used here."),
   li("Interpretations are deterministic summaries of classical rules, not the judgement of an experienced astrologer, and never a medical diagnosis."),
   li("Daylight-saving handling depends on the UTC offset entered."),
 
-  h1("18. Glossary"),
+  h1("19. Glossary"),
   param("Lagna", "Ascendant - the rising sign/degree."),
   param("Dusthana", "Houses 6, 8, 12 (difficulty/disease)."),
   param("Kendra / Trikona", "Angular houses 1/4/7/10 / trines 1/5/9."),

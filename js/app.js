@@ -18,6 +18,7 @@
   var kpdasha = window.AHS.kpdasha;
   var shadbala = window.AHS.shadbala;
   var neecha = window.AHS.neecha;
+  var accident = window.AHS.accident;
 
   var qaContext = null; // populated after a screening is generated
   var logoDataUrl = null; // letterhead logo, read client-side
@@ -475,6 +476,36 @@
     }
   }
 
+  function renderAccident(r) {
+    var c = $("accident-out");
+    c.innerHTML = "<h3>Accident &amp; Injury Risk <span class='sev-tag " + r.levelClass + "'>" + r.level + "</span></h3>";
+    c.appendChild(el("div", "summary-box", r.summary));
+    if (r.factors.length) {
+      c.appendChild(el("h4", null, "Contributing factors (promise)"));
+      var ul = el("ul");
+      r.factors.forEach(function (f) { ul.appendChild(el("li", null, f)); });
+      c.appendChild(ul);
+    }
+    if (r.bodyParts.length) {
+      var bp = el("div", "bodyparts");
+      bp.appendChild(el("span", null, "<strong>Areas most at risk:</strong> "));
+      r.bodyParts.forEach(function (b) { bp.appendChild(el("span", "chip", b)); });
+      c.appendChild(bp);
+    }
+    if (r.transitNotes.length) {
+      c.appendChild(el("p", null, "<strong>Current transit triggers:</strong> " + r.transitNotes.join("; ") + "."));
+    }
+    if (r.windows.length) {
+      c.appendChild(el("h4", null, "Accident-sensitive dasha windows"));
+      r.windows.forEach(function (w) {
+        c.appendChild(el("div", "qa-window" + (w.current ? " " : ""),
+          "<span class='when'>" + dasha.fmtDate(w.startMs) + " \u2013 " + dasha.fmtDate(w.endMs) + "</span> &mdash; " +
+          w.mdLord + "\u2013" + w.lord + " dasha" + (w.current ? " <span class='sev-tag high'>active now</span>" : "")));
+      });
+    }
+    c.appendChild(el("p", "hint", "Accident timing is probabilistic; treat sensitive windows as cues for extra caution (driving, sports, machinery), not as predictions."));
+  }
+
   function renderForecastHighlight(fc) {
     var c = $("forecast-highlight");
     c.hidden = false;
@@ -922,6 +953,7 @@
 
       if (f.unknownTime) {
         $("parashara-out").innerHTML = "<h3>Parashara Health Analysis</h3><p class='hint'>House-based analysis needs a birth time. Enter the time of birth to enable the full Parashara &amp; KP screening. Planetary sign/nakshatra placements above are still valid.</p>";
+        $("accident-out").innerHTML = "<h3>Accident &amp; Injury Risk</h3><p class='hint'>Accident analysis uses houses (1/4/6/8) and needs an accurate birth time.</p>";
         $("kp-out").innerHTML = "<h3>KP Health Analysis</h3><p class='hint'>KP relies on house cusps, which require an accurate birth time.</p>";
         $("risk-level").textContent = "n/a*";
         $("d6-score").textContent = "n/a*";
@@ -932,6 +964,7 @@
       } else {
         renderParashara(parRes);
         renderKP(kpRes);
+        renderAccident(accident.analyze(natal, { d6: d6chart, timeline: qaTimeline, transit: transit, nowMs: Date.now() }));
         $("d6-score").textContent = d6Res.score;
         fc = predict.forecast(natal, dz, { d22Lord: d22.lord, n64Lord: n64.lord }, { d6: d6chart, shadbala: shadbala.statusMap(sb), neechaCancelled: neecha.cancelledSet(neechaRes), transit: transit });
         var rl = $("risk-level");
