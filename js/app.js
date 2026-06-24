@@ -653,16 +653,35 @@
     box.appendChild(ul);
     c.appendChild(box);
 
-    c.appendChild(el("h4", null, "Contributing factors"));
-    fc.contributors.forEach(function (ct) {
-      var div = el("div", "finding low");
-      div.appendChild(el("h4", null, ct.planet + " <span class='hint'>(" + ct.roles.join("; ") + ")</span>"));
+    // PROMISE (natal charts) -- primary
+    var promised = fc.contributors.filter(function (ct) { return ct.promiseScore > 0; });
+    c.appendChild(el("h4", null, "Promised vulnerabilities &mdash; from the charts (D1 / KP / D6) <span class='hint'>primary weight</span>"));
+    if (!promised.length) c.appendChild(el("p", "hint", "No strong disease promise detected in the natal charts."));
+    promised.forEach(function (ct) {
+      var div = el("div", "finding " + (ct.confluence ? "high" : "moderate"));
+      div.appendChild(el("h4", null, ct.planet +
+        " <span class='hint'>promise " + ct.promiseScore + "</span>" +
+        (ct.confluence ? " <span class='sev-tag high'>triggered now</span>" : "")));
       if (ct.notes.length) div.appendChild(el("p", null, ct.notes.join("; ") + "."));
+      if (ct.confluence) div.appendChild(el("p", null, "<strong>Confluence:</strong> currently active as " + ct.roles.join(", ") + " &mdash; severity raised."));
       c.appendChild(div);
     });
 
+    // TRIGGERS (dasha + transit) -- secondary
+    c.appendChild(el("h4", null, "Current triggers &mdash; dasha &amp; transit <span class='hint'>secondary weight</span>"));
+    var triggers = fc.contributors.filter(function (ct) { return ct.triggerWeight > 0; });
+    triggers.forEach(function (ct) {
+      var div = el("div", "finding low");
+      div.appendChild(el("h4", null, ct.planet + " <span class='hint'>(" + ct.roles.join("; ") + ")</span>" +
+        (ct.confluence ? " <span class='sev-tag high'>activates a promise</span>" : " <span class='hint'>no promised disease &mdash; limited effect</span>")));
+      c.appendChild(div);
+    });
+    if (fc.transitNotes && fc.transitNotes.length) {
+      c.appendChild(el("p", null, "<strong>Transit triggers:</strong> " + fc.transitNotes.join("; ") + "."));
+    }
+
     var bp = el("div", "bodyparts");
-    bp.appendChild(el("span", null, "<strong>Weakest body areas (weighted):</strong> "));
+    bp.appendChild(el("span", null, "<strong>Most vulnerable areas (promise-led):</strong> "));
     fc.weakestParts.forEach(function (w) { bp.appendChild(el("span", "chip", w.name)); });
     c.appendChild(bp);
   }
@@ -914,7 +933,7 @@
         renderParashara(parRes);
         renderKP(kpRes);
         $("d6-score").textContent = d6Res.score;
-        fc = predict.forecast(natal, dz, { d22Lord: d22.lord, n64Lord: n64.lord }, { d6: d6chart, shadbala: shadbala.statusMap(sb), neechaCancelled: neecha.cancelledSet(neechaRes) });
+        fc = predict.forecast(natal, dz, { d22Lord: d22.lord, n64Lord: n64.lord }, { d6: d6chart, shadbala: shadbala.statusMap(sb), neechaCancelled: neecha.cancelledSet(neechaRes), transit: transit });
         var rl = $("risk-level");
         rl.textContent = fc.riskLevel;
         rl.className = "score-value risk-" + fc.riskClass;

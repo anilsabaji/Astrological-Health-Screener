@@ -29,143 +29,167 @@
   }
 
   /*
-   * chart   : core.buildChart output
-   * dasha   : dasha.compute output (md/ad/pd)
-   * maraka  : { d22Lord, n64Lord }
-   * extra   : optional { d6 } -- varga.buildD6 output, to fold in D6 disease houses
+   * forecast(chart, dasha, maraka, extra)
+   *
+   * Model: the PROMISE of disease in the natal charts (D1 + KP + D6) is primary
+   * and carries the most weight; it also determines the KIND of disease (body
+   * parts / ailments). Dasha and transits are TRIGGERS (timing) and carry less
+   * weight on their own. When a trigger activates a planet/area that is already
+   * PROMISED, that is a CONFLUENCE and severity is escalated.
+   *
+   *   extra : { d6, shadbala, neechaCancelled, transit }
    */
   function forecast(chart, dasha, maraka, extra) {
+    extra = extra || {};
+    var GRAHAS = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"];
     var dusthana = [6, 8, 12];
+    var hl = parashara.houseLords(chart.lagnaSignIndex);
 
-    // Contributing planets with base weights by role.
-    var roles = [
-      { planet: dasha.md.lord, role: "Maha Dasha lord", weight: 3.0 },
-      { planet: dasha.ad.lord, role: "Antar Dasha lord", weight: 2.2 },
-      { planet: dasha.pd.lord, role: "Pratyantar Dasha lord", weight: 1.6 },
-      { planet: maraka.n64Lord, role: "64th Navamsa lord (maraka)", weight: 2.0 },
-      { planet: maraka.d22Lord, role: "22nd Drekkana lord (maraka)", weight: 2.0 }
-    ];
+    // ---------------- 1. PROMISE (natal disease potential: D1 + KP + D6) -------
+    var promise = {}; // planet -> { score, reasons:[] }
+    function addP(planet, w, reason) {
+      if (!promise[planet]) promise[planet] = { score: 0, reasons: [] };
+      promise[planet].score += w;
+      if (reason) promise[planet].reasons.push(reason);
+    }
+    GRAHAS.forEach(function (planet) {
+      var pl = chart.planets[planet]; if (!pl) return;
+      // KP (chart promise): significator of disease houses 6/8/12
+      var sig = kp.planetSignifications(chart, planet);
+      var dh = dusthana.filter(function (h) { return sig.all.indexOf(h) >= 0; });
+      if (dh.length) addP(planet, dh.indexOf(6) >= 0 ? 2.0 : 1.3, "KP significator of disease house(s) " + dh.join(", "));
+      // D1 Parashara promise: placed in a dusthana
+      if (dusthana.indexOf(pl.wholeSignHouse) >= 0) addP(planet, 1.2, "placed in dusthana " + pl.wholeSignHouse + " (D1)");
+      // D1 debilitation (only if NOT cancelled by Neecha Bhanga)
+      var dig = parashara.dignityOf(planet, pl.signIndex);
+      if (dig === "debilitated" && !(extra.neechaCancelled && extra.neechaCancelled.indexOf(planet) >= 0))
+        addP(planet, 1.2, "debilitated, uncancelled (D1)");
+      // D6 promise: in the health-chart disease houses
+      if (extra.d6) {
+        var h6 = extra.d6.planets[planet].house;
+        if (h6 === 6) addP(planet, 1.3, "in D6 6th (disease)");
+        else if (h6 === 8) addP(planet, 0.9, "in D6 8th (crisis)");
+      }
+      // maraka points (chart-level affliction promise)
+      if (planet === maraka.d22Lord) addP(planet, 1.0, "22nd-Drekkana (maraka) lord");
+      if (planet === maraka.n64Lord) addP(planet, 1.0, "64th-Navamsa (maraka) lord");
+      // weak organ (Shadbala) deepens the promised vulnerability
+      if (extra.shadbala && extra.shadbala[planet] && extra.shadbala[planet].weak)
+        addP(planet, 0.6, "weak in Shadbala");
+    });
+    // Dusthana lordship (6th/8th lords promise their matters)
+    addP(hl.houseToLord[6], 1.2, "lord of the 6th (disease)");
+    addP(hl.houseToLord[8], 1.0, "lord of the 8th (chronic)");
 
-    // Fold in D6 (health-chart) disease-house occupants, if provided.
-    if (extra && extra.d6) {
-      ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"].forEach(function (p) {
-        var h = extra.d6.planets[p].house;
-        if (h === 6) roles.push({ planet: p, role: "in D6 6th (disease)", weight: 1.3 });
-        else if (h === 8) roles.push({ planet: p, role: "in D6 8th (crisis)", weight: 1.1 });
+    // ---------------- 2. TRIGGERS (timing: dasha + transit) --------------------
+    var triggers = {}; // planet -> { weight, roles:[] }
+    function addT(planet, w, role) {
+      if (!triggers[planet]) triggers[planet] = { weight: 0, roles: [] };
+      triggers[planet].weight += w; triggers[planet].roles.push(role);
+    }
+    addT(dasha.md.lord, 1.0, "Maha Dasha lord");
+    addT(dasha.ad.lord, 0.8, "Antar Dasha lord");
+    addT(dasha.pd.lord, 0.5, "Pratyantar Dasha lord");
+
+    var transitNotes = [];
+    if (extra.transit && extra.transit.planets) {
+      var lagna = chart.lagnaSignIndex;
+      ["Saturn", "Mars", "Rahu", "Ketu"].forEach(function (tp) {
+        var ts = extra.transit.planets[tp]; if (!ts) return;
+        var gh = ((ts.signIndex - lagna + 12) % 12) + 1;
+        if ([1, 6, 8, 12].indexOf(gh) >= 0) { addT(tp, 0.5, "transiting natal " + gh + "th"); transitNotes.push(tp + " transiting natal " + gh + "th house"); }
       });
+      var msign = chart.planets.Moon.signIndex, st = extra.transit.planets.Saturn;
+      if (st) { var d = ((st.signIndex - msign + 12) % 12); if (d === 11 || d === 0 || d === 1) { addT("Saturn", 0.5, "Sade Sati"); transitNotes.push("Saturn in Sade Sati over the natal Moon"); } }
     }
 
-    // Merge duplicate planets, summing weights and collecting roles.
-    var byPlanet = {};
-    roles.forEach(function (r) {
-      if (!byPlanet[r.planet]) byPlanet[r.planet] = { planet: r.planet, weight: 0, roles: [], notes: [] };
-      byPlanet[r.planet].weight += r.weight;
-      byPlanet[r.planet].roles.push(r.role);
+    // ---------------- 3. CONFLUENCE (trigger activates a promise) ---------------
+    var confluence = Object.keys(triggers).filter(function (pl) { return promise[pl] && promise[pl].score > 0; });
+
+    // ---------------- 4. KIND OF DISEASE (body parts / ailments) ---------------
+    // Dominated by PROMISE (the charts); triggers contribute only a little.
+    var PROMISE_W = 1.0, TRIGGER_ONLY_W = 0.4, CONFLUENCE_MULT = 1.6;
+    var bodyVotes = {}, ailmentVotes = {};
+    function distribute(planet, weight) {
+      var pl = chart.planets[planet];
+      (data.PLANET_BODY[planet] || []).slice(0, 3).forEach(function (b, i) { add(bodyVotes, b, weight * (i === 0 ? 1.4 : 1)); });
+      if (pl) (data.SIGN_BODY[pl.signIndex] || []).slice(0, 2).forEach(function (b) { add(bodyVotes, b, weight * 0.5); });
+      (data.PLANET_AILMENTS[planet] || []).slice(0, 3).forEach(function (a) { add(ailmentVotes, a, weight); });
+    }
+    Object.keys(promise).forEach(function (planet) {
+      var ps = promise[planet].score; if (ps <= 0) return;
+      var mult = confluence.indexOf(planet) >= 0 ? CONFLUENCE_MULT : 1.0;
+      distribute(planet, ps * PROMISE_W * mult);
     });
-
-    var bodyVotes = {};
-    var ailmentVotes = {};
-    var reasoning = [];
-    var riskScore = 0;
-
-    Object.keys(byPlanet).forEach(function (pname) {
-      var c = byPlanet[pname];
-      if (pname === "Rahu" || pname === "Ketu") {
-        // nodes have no body of their own sign-rulership; still carry ailments
-      }
-      var pl = chart.planets[pname];
-      var signIndex = pl ? pl.signIndex : null;
-      var w = c.weight;
-
-      // --- amplifiers ---
-      var amp = 1.0;
-      // KP: significator of disease houses 6/8/12?
-      var sig = kp.planetSignifications(chart, pname);
-      var disHouses = dusthana.filter(function (h) { return sig.all.indexOf(h) >= 0; });
-      if (disHouses.length) {
-        amp += 0.5;
-        c.notes.push("KP significator of disease house(s) " + disHouses.join(", "));
-        riskScore += 1.2 * c.roles.length;
-      }
-      // whole-sign dusthana placement
-      if (pl && dusthana.indexOf(pl.wholeSignHouse) >= 0) {
-        amp += 0.4;
-        c.notes.push("placed in dusthana house " + pl.wholeSignHouse);
-        riskScore += 1.0;
-      }
-      // dignity
-      var dig = pl ? parashara.dignityOf(pname, signIndex) : "neutral";
-      if (dig === "debilitated") {
-        if (extra && extra.neechaCancelled && extra.neechaCancelled.indexOf(pname) >= 0) {
-          c.notes.push("debilitated but cancelled (Neecha Bhanga)");
-        } else { amp += 0.4; c.notes.push("debilitated in " + core.SIGNS[signIndex]); riskScore += 1.0; }
-      }
-      else if (dig === "exalted" || dig === "own sign") { amp -= 0.15; c.notes.push("dignified (" + dig + "), partly protective"); }
-      // maraka convergence (lord serves a dasha role AND a maraka role)
-      var isDashaRole = c.roles.some(function (r) { return /Dasha/.test(r); });
-      var isMarakaRole = c.roles.some(function (r) { return /maraka/.test(r); });
-      if (isDashaRole && isMarakaRole) {
-        amp += 0.6;
-        c.notes.push("running-period lord coincides with a maraka point \u2014 heightened sensitivity");
-        riskScore += 2.0;
-      }
-
-      // Shadbala: a weak/combust period lord is less able to protect; strong is resilient
-      if (extra && extra.shadbala && extra.shadbala[pname]) {
-        var sbp = extra.shadbala[pname];
-        if (sbp.weak) { amp += 0.4; c.notes.push("weak in Shadbala (" + sbp.rupas + " Rupas)"); riskScore += 1.0; }
-        else if (sbp.strong) { amp -= 0.2; c.notes.push("strong in Shadbala \u2014 resilient"); }
-        if (sbp.combust) { amp += 0.3; c.notes.push("combust"); riskScore += 0.5; }
-        if (sbp.retro) c.notes.push("retrograde");
-      }
-
-      c.effectiveWeight = w * amp;
-      // --- distribute to body parts & ailments ---
-      // Planetary karaka body parts lead (organ-specific); the occupied sign's
-      // Kalapurusha parts are secondary (general bodily region).
-      var parts = (data.PLANET_BODY[pname] || []);
-      parts.forEach(function (b, i) {
-        var f = i === 0 ? 1.4 : i < 3 ? 1.0 : 0.5;
-        add(bodyVotes, b, c.effectiveWeight * f);
-      });
-      if (signIndex !== null) {
-        (data.SIGN_BODY[signIndex] || []).forEach(function (b) { add(bodyVotes, b, c.effectiveWeight * 0.5); });
-      }
-      (data.PLANET_AILMENTS[pname] || []).forEach(function (a, i) { add(ailmentVotes, a, c.effectiveWeight * (i < 3 ? 1 : 0.5)); });
+    Object.keys(triggers).forEach(function (planet) {
+      if (promise[planet] && promise[planet].score > 0) return; // counted via promise+confluence
+      distribute(planet, triggers[planet].weight * TRIGGER_ONLY_W);
     });
-
-    // Build contributor list (sorted by effective weight)
-    var contributors = Object.keys(byPlanet).map(function (k) { return byPlanet[k]; })
-      .sort(function (a, b) { return b.effectiveWeight - a.effectiveWeight; });
 
     var weakestParts = topN(bodyVotes, 4);
     var probableIssues = topN(ailmentVotes, 4);
 
-    // Risk band
+    // ---------------- 5. RISK (promise base, escalated by confluence) ----------
+    var promiseMagnitude = 0;
+    Object.keys(promise).forEach(function (pl) { promiseMagnitude += promise[pl].score; });
+    var confluenceStrength = 0;
+    confluence.forEach(function (pl) { confluenceStrength += promise[pl].score * triggers[pl].weight; });
+    var triggerOnly = 0;
+    Object.keys(triggers).forEach(function (pl) { if (confluence.indexOf(pl) < 0) triggerOnly += triggers[pl].weight; });
+
+    // promise sets the floor; confluence multiplies; bare triggers add little.
+    var riskScore = promiseMagnitude * 0.5 + confluenceStrength * 1.8 + triggerOnly * 0.3 + transitNotes.length * 0.4;
+
     var riskLevel, riskClass;
-    if (riskScore >= 6) { riskLevel = "Elevated"; riskClass = "high"; }
-    else if (riskScore >= 3) { riskLevel = "Moderate"; riskClass = "moderate"; }
+    if (riskScore >= 9) { riskLevel = "Elevated"; riskClass = "high"; }
+    else if (riskScore >= 5) { riskLevel = "Moderate"; riskClass = "moderate"; }
     else { riskLevel = "Lower"; riskClass = "low"; }
 
-    // Reasoning narrative
-    reasoning.push("Current period: " + dasha.md.lord + " Maha Dasha \u2192 " +
-      dasha.ad.lord + " Antar Dasha \u2192 " + dasha.pd.lord + " Pratyantar Dasha.");
-    contributors.slice(0, 3).forEach(function (c) {
-      var pl = chart.planets[c.planet];
-      reasoning.push(c.planet + " (" + c.roles.join("; ") + ")" +
-        (pl ? " in " + pl.sign + ", house " + pl.wholeSignHouse : "") +
-        (c.notes.length ? " \u2014 " + c.notes.join("; ") : "") + ".");
+    // ---------------- 6. Contributor list (promise + trigger + confluence) -----
+    var allPlanets = {};
+    Object.keys(promise).forEach(function (p) { allPlanets[p] = true; });
+    Object.keys(triggers).forEach(function (p) { allPlanets[p] = true; });
+    var contributors = Object.keys(allPlanets).map(function (p) {
+      var ps = promise[p] ? promise[p].score : 0;
+      var tw = triggers[p] ? triggers[p].weight : 0;
+      var isConf = confluence.indexOf(p) >= 0;
+      var roles = [];
+      if (triggers[p]) roles = roles.concat(triggers[p].roles);
+      var notes = (promise[p] ? promise[p].reasons.slice() : []);
+      return {
+        planet: p,
+        promiseScore: Math.round(ps * 10) / 10,
+        triggerWeight: Math.round(tw * 10) / 10,
+        confluence: isConf,
+        roles: roles,
+        notes: notes,
+        effectiveWeight: ps * (isConf ? CONFLUENCE_MULT : 1) + tw * (promise[p] ? 0 : TRIGGER_ONLY_W)
+      };
+    }).sort(function (a, b) { return b.effectiveWeight - a.effectiveWeight; });
+
+    // ---------------- 7. Narrative ---------------------------------------------
+    var reasoning = [];
+    reasoning.push("Promise (natal D1 + KP + D6) carries the primary weight; the running " +
+      dasha.md.lord + "\u2013" + dasha.ad.lord + "\u2013" + dasha.pd.lord + " dasha and current transits act as triggers.");
+    var promisedTop = contributors.filter(function (c) { return c.promiseScore > 0; }).slice(0, 3);
+    promisedTop.forEach(function (c) {
+      reasoning.push("PROMISE \u2014 " + c.planet + ": " + c.notes.join("; ") +
+        (c.confluence ? " [also a current trigger: " + c.roles.join(", ") + " \u2192 CONFLUENCE, severity raised]" : "") + ".");
     });
+    if (transitNotes.length) reasoning.push("Transit triggers: " + transitNotes.join("; ") + ".");
+    if (!confluence.length) reasoning.push("The current dasha/transit triggers do not strongly coincide with the promised afflictions, so timing pressure is comparatively low.");
 
     var primary = weakestParts[0] ? weakestParts[0].name : "general vitality";
     var primaryIssue = probableIssues[0] ? probableIssues[0].name : "general low energy";
-
-    var verdict = "During the current " + dasha.md.lord + "\u2013" + dasha.ad.lord + "\u2013" +
-      dasha.pd.lord + " period, the body area most likely to need attention is the " +
-      "<strong>" + primary + "</strong>" +
-      (weakestParts[1] ? " (also: " + weakestParts[1].name + ")" : "") +
+    var verdict = "The natal charts (D1 / KP / D6) promise vulnerability chiefly in the <strong>" + primary + "</strong>" +
+      (weakestParts[1] ? " (also " + weakestParts[1].name + ")" : "") +
       ", with the most probable concern being <strong>" + primaryIssue + "</strong>. " +
-      "Overall health risk for this period reads as <strong>" + riskLevel + "</strong>.";
+      (confluence.length
+        ? "The current " + dasha.md.lord + "\u2013" + dasha.ad.lord + "\u2013" + dasha.pd.lord +
+          " period " + (transitNotes.length ? "and transits " : "") + "<strong>act on</strong> this promise (" +
+          confluence.join(", ") + "), so severity is heightened."
+        : "The current period and transits do not strongly trigger this promise at present.") +
+      " Overall risk: <strong>" + riskLevel + "</strong>.";
 
     return {
       period: {
@@ -178,6 +202,8 @@
       weakestParts: weakestParts,
       probableIssues: probableIssues,
       contributors: contributors,
+      confluence: confluence,
+      transitNotes: transitNotes,
       reasoning: reasoning,
       verdict: verdict
     };
