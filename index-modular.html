@@ -326,8 +326,14 @@
 
       <div class="tab-panel" id="tab-timeline">
         <div class="card">
-          <h3>20-Year Health Timeline <span class="sub" id="timeline-range"></span></h3>
-          <p class="hint">Vitality over the next 20 years from both systems &mdash; <span style="color:var(--indigo)">&#9632; Parashara</span> and <span style="color:var(--gold)">&#9632; KP</span>. Higher = better. Considers the 22nd Drekkana &amp; 64th Navamsa. Severity is relative within this 20-year window.</p>
+          <h3>Health Timeline <span class="sub" id="timeline-range"></span>
+            <span class="chart-fmt-toggle">
+              <button type="button" id="tl-10" class="fmt-btn">10 yrs</button>
+              <button type="button" id="tl-20" class="fmt-btn active">20 yrs</button>
+              <button type="button" id="tl-30" class="fmt-btn">30 yrs</button>
+            </span>
+          </h3>
+          <p class="hint">Vitality over the coming years from both systems &mdash; <span style="color:var(--indigo)">&#9632; Parashara</span> and <span style="color:var(--gold)">&#9632; KP</span>. Higher = better. Considers the 22nd Drekkana &amp; 64th Navamsa. Severity is relative within the chosen window.</p>
           <div id="timeline-graph"></div>
         </div>
         <div class="card">

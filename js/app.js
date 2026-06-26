@@ -20,6 +20,7 @@
   var neecha = window.AHS.neecha;
   var accident = window.AHS.accident;
   var healthTimeline = window.AHS.healthTimeline;
+  var timelineCtx = null, timelineYears = 20;
 
   var qaContext = null; // populated after a screening is generated
   var logoDataUrl = null; // letterhead logo, read client-side
@@ -507,6 +508,21 @@
     c.appendChild(el("p", "hint", "Accident timing is probabilistic; treat sensitive windows as cues for extra caution (driving, sports, machinery), not as predictions."));
   }
 
+  function computeTimeline(years) {
+    if (!timelineCtx) return;
+    var t = healthTimeline.analyze(timelineCtx.natal, {
+      timeline: timelineCtx.timeline, maraka: timelineCtx.maraka,
+      neechaCancelled: timelineCtx.neechaCancelled, accidentProne: timelineCtx.accidentProne,
+      nowMs: Date.now(), years: years
+    });
+    renderTimeline(t);
+  }
+  function setTimelineYears(y) {
+    timelineYears = y;
+    [10, 20, 30].forEach(function (n) { var b = $("tl-" + n); if (b) b.classList.toggle("active", n === y); });
+    computeTimeline(y);
+  }
+
   function renderTimeline(t) {
     $("timeline-range").textContent = healthTimeline.fmt(t.startMs) + " \u2013 " + healthTimeline.fmt(t.endMs);
     // table
@@ -919,6 +935,7 @@
     var overrides = "\n/* report export overrides */\n" +
       "#form-card,.tabs,.report-actions,.qa-examples,#qa-input,#qa-btn,.city-search,.city-results,.usage-counter,.chart-fmt-toggle{display:none!important}\n" +
       "#results{display:block!important}\n.tab-panel{display:block!important}\n" +
+      ".table-scroll.tall{max-height:none!important;overflow:visible!important}\n" +
       "body{background:#0e1020}\n" +
       "*{-webkit-print-color-adjust:exact;print-color-adjust:exact}\n";
 
@@ -1032,8 +1049,8 @@
         renderKPDasha(kpdasha.analyze(natal, dz));
         renderKPSchedule(kpdasha.schedule(natal, qaTimeline, Date.now()));
         renderShadbala(sb, shadbala.healthAnalysis(sb));
-        var tlRes = healthTimeline.analyze(natal, { timeline: qaTimeline, maraka: { d22Lord: d22.lord, n64Lord: n64.lord }, neechaCancelled: neecha.cancelledSet(neechaRes), accidentProne: accRes.score >= 4.5, nowMs: Date.now(), years: 20 });
-        renderTimeline(tlRes);
+        timelineCtx = { natal: natal, timeline: qaTimeline, maraka: { d22Lord: d22.lord, n64Lord: n64.lord }, neechaCancelled: neecha.cancelledSet(neechaRes), accidentProne: accRes.score >= 4.5 };
+        computeTimeline(timelineYears);
       }
 
       // Enable the Ask-a-Question module with a ready context.
@@ -1087,6 +1104,7 @@
     $("print-btn").addEventListener("click", printReport);
     $("fmt-south").addEventListener("click", function () { setChartFormat("south"); });
     $("fmt-north").addEventListener("click", function () { setChartFormat("north"); });
+    [10, 20, 30].forEach(function (n) { var b = $("tl-" + n); if (b) b.addEventListener("click", function () { setTimelineYears(n); }); });
     $("download-btn").addEventListener("click", downloadReport);
     $("lh-logo").addEventListener("change", function (e) {
       var file = e.target.files && e.target.files[0];

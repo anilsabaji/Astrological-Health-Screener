@@ -324,6 +324,10 @@ button.ghost { background: transparent; }
 
   /* Major sections start on a fresh page */
   #tab-chart, #tab-parashara, #tab-kp, #tab-dasha, #tab-d6, #tab-divisional { page-break-before: always; }
+  #tab-timeline { page-break-before: always; }
+  /* Show the full timeline table (no scroll clipping) and keep the graph whole */
+  .table-scroll.tall { max-height: none !important; overflow: visible !important; }
+  #timeline-graph { page-break-inside: avoid; }
 
   /* Compact single-row charts in the printed report */
   #charts-card { page-break-inside: avoid; }

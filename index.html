@@ -331,6 +331,10 @@ button.ghost { background: transparent; }
 
   /* Major sections start on a fresh page */
   #tab-chart, #tab-parashara, #tab-kp, #tab-dasha, #tab-d6, #tab-divisional { page-break-before: always; }
+  #tab-timeline { page-break-before: always; }
+  /* Show the full timeline table (no scroll clipping) and keep the graph whole */
+  .table-scroll.tall { max-height: none !important; overflow: visible !important; }
+  #timeline-graph { page-break-inside: avoid; }
 
   /* Compact single-row charts in the printed report */
   #charts-card { page-break-inside: avoid; }
@@ -664,8 +668,14 @@ button.ghost { background: transparent; }
 
       <div class="tab-panel" id="tab-timeline">
         <div class="card">
-          <h3>20-Year Health Timeline <span class="sub" id="timeline-range"></span></h3>
-          <p class="hint">Vitality over the next 20 years from both systems &mdash; <span style="color:var(--indigo)">&#9632; Parashara</span> and <span style="color:var(--gold)">&#9632; KP</span>. Higher = better. Considers the 22nd Drekkana &amp; 64th Navamsa. Severity is relative within this 20-year window.</p>
+          <h3>Health Timeline <span class="sub" id="timeline-range"></span>
+            <span class="chart-fmt-toggle">
+              <button type="button" id="tl-10" class="fmt-btn">10 yrs</button>
+              <button type="button" id="tl-20" class="fmt-btn active">20 yrs</button>
+              <button type="button" id="tl-30" class="fmt-btn">30 yrs</button>
+            </span>
+          </h3>
+          <p class="hint">Vitality over the coming years from both systems &mdash; <span style="color:var(--indigo)">&#9632; Parashara</span> and <span style="color:var(--gold)">&#9632; KP</span>. Higher = better. Considers the 22nd Drekkana &amp; 64th Navamsa. Severity is relative within the chosen window.</p>
           <div id="timeline-graph"></div>
         </div>
         <div class="card">
@@ -3928,6 +3938,7 @@ button.ghost { background: transparent; }
   var neecha = window.AHS.neecha;
   var accident = window.AHS.accident;
   var healthTimeline = window.AHS.healthTimeline;
+  var timelineCtx = null, timelineYears = 20;
 
   var qaContext = null; // populated after a screening is generated
   var logoDataUrl = null; // letterhead logo, read client-side
@@ -4415,6 +4426,21 @@ button.ghost { background: transparent; }
     c.appendChild(el("p", "hint", "Accident timing is probabilistic; treat sensitive windows as cues for extra caution (driving, sports, machinery), not as predictions."));
   }
 
+  function computeTimeline(years) {
+    if (!timelineCtx) return;
+    var t = healthTimeline.analyze(timelineCtx.natal, {
+      timeline: timelineCtx.timeline, maraka: timelineCtx.maraka,
+      neechaCancelled: timelineCtx.neechaCancelled, accidentProne: timelineCtx.accidentProne,
+      nowMs: Date.now(), years: years
+    });
+    renderTimeline(t);
+  }
+  function setTimelineYears(y) {
+    timelineYears = y;
+    [10, 20, 30].forEach(function (n) { var b = $("tl-" + n); if (b) b.classList.toggle("active", n === y); });
+    computeTimeline(y);
+  }
+
   function renderTimeline(t) {
     $("timeline-range").textContent = healthTimeline.fmt(t.startMs) + " \u2013 " + healthTimeline.fmt(t.endMs);
     // table
@@ -4827,6 +4853,7 @@ button.ghost { background: transparent; }
     var overrides = "\n/* report export overrides */\n" +
       "#form-card,.tabs,.report-actions,.qa-examples,#qa-input,#qa-btn,.city-search,.city-results,.usage-counter,.chart-fmt-toggle{display:none!important}\n" +
       "#results{display:block!important}\n.tab-panel{display:block!important}\n" +
+      ".table-scroll.tall{max-height:none!important;overflow:visible!important}\n" +
       "body{background:#0e1020}\n" +
       "*{-webkit-print-color-adjust:exact;print-color-adjust:exact}\n";
 
@@ -4940,8 +4967,8 @@ button.ghost { background: transparent; }
         renderKPDasha(kpdasha.analyze(natal, dz));
         renderKPSchedule(kpdasha.schedule(natal, qaTimeline, Date.now()));
         renderShadbala(sb, shadbala.healthAnalysis(sb));
-        var tlRes = healthTimeline.analyze(natal, { timeline: qaTimeline, maraka: { d22Lord: d22.lord, n64Lord: n64.lord }, neechaCancelled: neecha.cancelledSet(neechaRes), accidentProne: accRes.score >= 4.5, nowMs: Date.now(), years: 20 });
-        renderTimeline(tlRes);
+        timelineCtx = { natal: natal, timeline: qaTimeline, maraka: { d22Lord: d22.lord, n64Lord: n64.lord }, neechaCancelled: neecha.cancelledSet(neechaRes), accidentProne: accRes.score >= 4.5 };
+        computeTimeline(timelineYears);
       }
 
       // Enable the Ask-a-Question module with a ready context.
@@ -4995,6 +5022,7 @@ button.ghost { background: transparent; }
     $("print-btn").addEventListener("click", printReport);
     $("fmt-south").addEventListener("click", function () { setChartFormat("south"); });
     $("fmt-north").addEventListener("click", function () { setChartFormat("north"); });
+    [10, 20, 30].forEach(function (n) { var b = $("tl-" + n); if (b) b.addEventListener("click", function () { setTimelineYears(n); }); });
     $("download-btn").addEventListener("click", downloadReport);
     $("lh-logo").addEventListener("change", function (e) {
       var file = e.target.files && e.target.files[0];
