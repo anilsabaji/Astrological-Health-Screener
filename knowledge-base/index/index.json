@@ -1,0 +1,162 @@
+[
+  {
+    "id": "note:resources-notes-getting-started-md",
+    "type": "note",
+    "title": "Getting started with this knowledge base",
+    "category": "uncategorized",
+    "tags": [
+      "meta",
+      "workflow",
+      "onboarding"
+    ],
+    "keywords": [
+      "resources",
+      "python",
+      "scripts",
+      "category",
+      "link",
+      "notes",
+      "search.py",
+      "snippets",
+      "add.py",
+      "base",
+      "build",
+      "code"
+    ],
+    "summary": "How to capture and find the resources you use to build projects: documents (PDFs), notes, reusable code snippets, and curated links.",
+    "location": "resources/notes/getting-started.md",
+    "is_url": false,
+    "size_human": "1.2 KB",
+    "pages": 0,
+    "error": ""
+  },
+  {
+    "id": "snippet:resources-snippets-fetch-with-retry-js",
+    "type": "snippet",
+    "title": "fetch with exponential backoff retry",
+    "category": "frontend",
+    "tags": [
+      "javascript",
+      "http",
+      "resilience",
+      "retry"
+    ],
+    "keywords": [
+      "retries",
+      "attempt",
+      "fetch",
+      "lasterror",
+      "await",
+      "basedelay",
+      "const",
+      "delay",
+      "error",
+      "exponential",
+      "fetchwithretry",
+      "network"
+    ],
+    "summary": "async function fetchWithRetry(url, options = {}, { retries = 3, baseDelay = 300 } = {}) { let lastError; for (let attempt = 0; attempt <= retries; attempt++) { try { const res = await fetch(url, options); if (res.status >= 500 && attempt < retries) { throw new Error(`Server error ${res.status}`); } return res; } catch (err) { lastError = err; if (attempt === retries) break; const delay = baseDelay",
+    "location": "resources/snippets/fetch-with-retry.js",
+    "is_url": false,
+    "size_human": "894 B",
+    "pages": 0,
+    "error": "",
+    "language": "js"
+  },
+  {
+    "id": "link:https-developer-mozilla-org",
+    "type": "link",
+    "title": "MDN Web Docs",
+    "category": "frontend",
+    "tags": [
+      "reference",
+      "javascript",
+      "html",
+      "css",
+      "web"
+    ],
+    "keywords": [
+      "reference",
+      "javascript",
+      "html",
+      "css",
+      "web"
+    ],
+    "summary": "Authoritative reference for web platform APIs, HTML, CSS, and JavaScript.",
+    "location": "https://developer.mozilla.org/",
+    "is_url": true,
+    "size_human": "",
+    "pages": 0,
+    "error": ""
+  },
+  {
+    "id": "link:https-12factor-net",
+    "type": "link",
+    "title": "The Twelve-Factor App",
+    "category": "backend",
+    "tags": [
+      "architecture",
+      "best-practices",
+      "saas",
+      "deployment"
+    ],
+    "keywords": [
+      "architecture",
+      "best-practices",
+      "saas",
+      "deployment"
+    ],
+    "summary": "Methodology for building portable, scalable software-as-a-service apps.",
+    "location": "https://12factor.net/",
+    "is_url": true,
+    "size_human": "",
+    "pages": 0,
+    "error": ""
+  },
+  {
+    "id": "link:https-github-com-awesome-selfhosted-awesome-selfhosted",
+    "type": "link",
+    "title": "Awesome Self-Hosted",
+    "category": "devops",
+    "tags": [
+      "tools",
+      "self-hosting",
+      "infrastructure",
+      "list"
+    ],
+    "keywords": [
+      "tools",
+      "self-hosting",
+      "infrastructure",
+      "list"
+    ],
+    "summary": "Curated list of free software network services and web applications to self-host.",
+    "location": "https://github.com/awesome-selfhosted/awesome-selfhosted",
+    "is_url": true,
+    "size_human": "",
+    "pages": 0,
+    "error": ""
+  },
+  {
+    "id": "link:https-www-postgresql-org-docs",
+    "type": "link",
+    "title": "PostgreSQL Docs",
+    "category": "backend",
+    "tags": [
+      "database",
+      "sql",
+      "reference"
+    ],
+    "keywords": [
+      "database",
+      "sql",
+      "reference"
+    ],
+    "summary": "Official PostgreSQL documentation.",
+    "location": "https://www.postgresql.org/docs/",
+    "is_url": true,
+    "size_human": "",
+    "pages": 0,
+    "error": ""
+  }
+]

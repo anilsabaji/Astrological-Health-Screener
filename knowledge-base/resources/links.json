@@ -1,0 +1,50 @@
+[
+  {
+    "title": "MDN Web Docs",
+    "url": "https://developer.mozilla.org/",
+    "category": "frontend",
+    "tags": [
+      "reference",
+      "javascript",
+      "html",
+      "css",
+      "web"
+    ],
+    "notes": "Authoritative reference for web platform APIs, HTML, CSS, and JavaScript."
+  },
+  {
+    "title": "The Twelve-Factor App",
+    "url": "https://12factor.net/",
+    "category": "backend",
+    "tags": [
+      "architecture",
+      "best-practices",
+      "saas",
+      "deployment"
+    ],
+    "notes": "Methodology for building portable, scalable software-as-a-service apps."
+  },
+  {
+    "title": "Awesome Self-Hosted",
+    "url": "https://github.com/awesome-selfhosted/awesome-selfhosted",
+    "category": "devops",
+    "tags": [
+      "tools",
+      "self-hosting",
+      "infrastructure",
+      "list"
+    ],
+    "notes": "Curated list of free software network services and web applications to self-host."
+  },
+  {
+    "title": "PostgreSQL Docs",
+    "url": "https://www.postgresql.org/docs/",
+    "category": "backend",
+    "tags": [
+      "database",
+      "sql",
+      "reference"
+    ],
+    "notes": "Official PostgreSQL documentation."
+  }
+]

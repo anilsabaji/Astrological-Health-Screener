@@ -1,0 +1,7 @@
+# Store large binary documents in Git LFS to keep the repo lean.
+*.pdf  filter=lfs diff=lfs merge=lfs -text
+*.epub filter=lfs diff=lfs merge=lfs -text
+*.docx filter=lfs diff=lfs merge=lfs -text
+
+# Treat generated text extracts as plain text (diffable).
+index/text/*.txt text
