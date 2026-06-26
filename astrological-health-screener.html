@@ -157,6 +157,17 @@ button.ghost { background: transparent; }
 .data-table th { color: var(--gold); font-weight: 600; }
 .data-table tbody tr:hover { background: var(--card-2); }
 .data-table tr.row-current { background: rgba(124,131,247,.14); }
+
+/* Severity bands (20-year timeline) */
+.band { display:inline-block; padding:2px 9px; border-radius:6px; font-size:.72rem; font-weight:700; }
+.band.low { background:rgba(87,201,138,.2); color:var(--green); }
+.band.moderate { background:rgba(232,184,75,.2); color:var(--amber); }
+.band.high { background:rgba(240,150,70,.25); color:#f0a050; }
+.band.adverse { background:rgba(239,106,106,.22); color:var(--red); }
+.band.fatal { background:rgba(150,20,40,.55); color:#ffd0d0; }
+.table-scroll.tall { max-height:480px; overflow:auto; }
+.table-scroll.tall thead th { position:sticky; top:0; background:var(--card); z-index:1; }
+.timeline-svg { width:100%; height:auto; background:var(--bg-2); border:1px solid var(--line); border-radius:8px; }
 .sub { font-size: .85rem; color: var(--muted); font-weight: normal; margin-left: 8px; }
 
 .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .72rem; font-weight: 700; }
@@ -510,6 +521,7 @@ button.ghost { background: transparent; }
         <button class="tab" data-tab="kp">KP Analysis</button>
         <button class="tab" data-tab="dasha">Dasha &amp; Forecast</button>
         <button class="tab" data-tab="kpdasha">KP Dasha</button>
+        <button class="tab" data-tab="timeline">20-Yr Health</button>
         <button class="tab" data-tab="d6">D6 Health</button>
         <button class="tab" data-tab="shadbala">Shadbala</button>
         <button class="tab" data-tab="divisional">Divisionals (D3)</button>
@@ -648,6 +660,26 @@ button.ghost { background: transparent; }
           </div>
         </div>
         <div class="card" id="kp-sensitive-out"></div>
+      </div>
+
+      <div class="tab-panel" id="tab-timeline">
+        <div class="card">
+          <h3>20-Year Health Timeline <span class="sub" id="timeline-range"></span></h3>
+          <p class="hint">Vitality over the next 20 years from both systems &mdash; <span style="color:var(--indigo)">&#9632; Parashara</span> and <span style="color:var(--gold)">&#9632; KP</span>. Higher = better. Considers the 22nd Drekkana &amp; 64th Navamsa. Severity is relative within this 20-year window.</p>
+          <div id="timeline-graph"></div>
+        </div>
+        <div class="card">
+          <h3>Period-by-period (Maha &middot; Antar &middot; Pratyantar)</h3>
+          <div class="table-scroll tall">
+            <table class="data-table" id="timeline-table">
+              <thead>
+                <tr><th>Dasha (MD-AD-PD)</th><th>Date range (dd/mm/yyyy)</th><th>Area of concern</th><th>Parashara</th><th>KP</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="hint">Severity bands: Low / Moderate / High / Adverse / Fatal. "Fatal" is reserved for the most critical maraka-triggered windows and denotes the astrologically most demanding periods &mdash; it is NOT a prediction of death. Use for preventive care only.</p>
+        </div>
       </div>
 
       <div class="tab-panel" id="tab-d6">
@@ -3011,6 +3043,169 @@ button.ghost { background: transparent; }
 })(typeof window !== "undefined" ? window : globalThis);
 
 
+/* ===== js/timeline-health.js ===== */
+/*
+ * timeline-health.js
+ * A 20-year health timeline at Pratyantar (3-level) granularity, scoring each
+ * period independently under BOTH Parashara and KP, considering the 22nd
+ * Drekkana and 64th Navamsa (maraka) lords. Produces table rows and the
+ * vitality series for the graph.
+ *
+ * Method: a per-planet "disease weight" is precomputed once from the natal
+ * charts (the PROMISE). A period's severity = level-weighted sum of its
+ * Maha/Antar/Pratyantar lords' disease weights (the TRIGGER acting on the
+ * promise). Higher disease weight running at multiple levels => higher severity.
+ *
+ * Works in browser (window.AHS.healthTimeline) and Node.
+ */
+(function (root) {
+  "use strict";
+
+  var R = (typeof require !== "undefined");
+  var core = R ? require("./astro-core.js") : root.AHS.core;
+  var data = R ? require("./data.js") : root.AHS.data;
+  var parashara = R ? require("./parashara.js") : root.AHS.parashara;
+  var kp = R ? require("./kp.js") : root.AHS.kp;
+  var dasha = R ? require("./dasha.js") : root.AHS.dasha;
+
+  var GRAHAS = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"];
+  var ABBR = { Sun: "Sun", Moon: "Moon", Mars: "Mars", Mercury: "Merc", Jupiter: "Jup", Venus: "Ven", Saturn: "Sat", Rahu: "Rahu", Ketu: "Ketu" };
+  function uniq(a) { return a.filter(function (v, i) { return a.indexOf(v) === i; }); }
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function fmt(ms) { var d = new Date(ms); return pad(d.getUTCDate()) + "/" + pad(d.getUTCMonth() + 1) + "/" + d.getUTCFullYear(); }
+
+  function band(score) {
+    if (score >= 19) return { label: "Fatal", klass: "fatal" };
+    if (score >= 13) return { label: "Adverse", klass: "adverse" };
+    if (score >= 8) return { label: "High", klass: "high" };
+    if (score >= 4) return { label: "Moderate", klass: "moderate" };
+    return { label: "Low", klass: "low" };
+  }
+
+  /*
+   * analyze(chart, opts)
+   *   opts = { timeline, maraka:{d22Lord,n64Lord}, neechaCancelled, accidentProne, nowMs, years }
+   */
+  function analyze(chart, opts) {
+    opts = opts || {};
+    var maraka = opts.maraka || {};
+    var cancelled = opts.neechaCancelled || [];
+    var hl = parashara.houseLords(chart.lagnaSignIndex);
+    var owns = {};
+    for (var h = 1; h <= 12; h++) { var L = hl.houseToLord[h]; (owns[L] = owns[L] || []).push(h); }
+
+    // ---- precompute per-planet disease weights (the natal PROMISE) ----
+    var pW = {}, kW = {};
+    GRAHAS.forEach(function (p) {
+      var pl = chart.planets[p];
+      var hp = pl.wholeSignHouse;
+      // Parashara
+      var pw = 0;
+      if (hp === 8) pw += 2.5; else if (hp === 6) pw += 2.0; else if (hp === 12) pw += 1.5;
+      (owns[p] || []).forEach(function (hh) {
+        if (hh === 6) pw += 1.5; else if (hh === 8) pw += 1.5; else if (hh === 12) pw += 1.0;
+        else if (hh === 2 || hh === 7) pw += 1.2;
+      });
+      var dig = parashara.dignityOf(p, pl.signIndex);
+      if (dig === "debilitated" && cancelled.indexOf(p) < 0) pw += 1.5;
+      if (data.NATURE[p] === "malefic") {
+        pw += 0.5;
+        if (hp === 1 || parashara.aspectsFrom(p, hp).indexOf(1) >= 0) pw += 0.8;
+      }
+      if (p === maraka.d22Lord) pw += 1.5;
+      if (p === maraka.n64Lord) pw += 1.5;
+      pW[p] = pw;
+      // KP -- use PRIMARY (star-lord) significations as the strong signal,
+      // with secondary (occupation/ownership) significations counting less.
+      var sig = kp.planetSignifications(chart, p);
+      var strong = sig.strong, all = sig.all;
+      var kw = 0;
+      if (strong.indexOf(6) >= 0) kw += 2.5; else if (all.indexOf(6) >= 0) kw += 1.0;
+      if (strong.indexOf(8) >= 0) kw += 1.8; else if (all.indexOf(8) >= 0) kw += 0.6;
+      if (strong.indexOf(12) >= 0) kw += 1.2; else if (all.indexOf(12) >= 0) kw += 0.4;
+      if (strong.indexOf(1) >= 0 || strong.indexOf(5) >= 0 || strong.indexOf(11) >= 0) kw -= 1.0;
+      if (p === maraka.d22Lord) kw += 1.5;
+      if (p === maraka.n64Lord) kw += 1.5;
+      kW[p] = Math.max(0, kw);
+    });
+
+    // maraka lords gate "Fatal": only periods whose MD or AD lord is a maraka
+    // (2nd/7th/8th lord or a Khara point) may reach the Fatal band.
+    var marakaLords = uniq([maraka.d22Lord, maraka.n64Lord, hl.houseToLord[2], hl.houseToLord[7], hl.houseToLord[8]]);
+    function gated(b, md, ad) {
+      if (b.label === "Fatal" && marakaLords.indexOf(md) < 0 && marakaLords.indexOf(ad) < 0)
+        return { label: "Adverse", klass: "adverse" };
+      return b;
+    }
+
+    function sev(W, md, ad, pd) { return 3 * (W[md] || 0) + 2 * (W[ad] || 0) + 1 * (W[pd] || 0); }
+
+    function areaOf(md, ad, pd) {
+      var parts = (data.PLANET_BODY[md] || []).slice(0, 2)
+        .concat((data.PLANET_BODY[ad] || []).slice(0, 1));
+      parts = uniq(parts).slice(0, 3);
+      var tags = [];
+      if (opts.accidentProne && [md, ad, pd].some(function (l) { return ["Mars", "Rahu", "Ketu"].indexOf(l) >= 0; }))
+        tags.push("accident risk");
+      if ([md, ad].some(function (l) { return l === "Moon" || l === "Mercury"; }))
+        tags.push("mind/emotions");
+      return parts.join(", ") + (tags.length ? " [" + tags.join(", ") + "]" : "");
+    }
+
+    // ---- build Pratyantar rows over the window (raw scores first) ----
+    var now = opts.nowMs || Date.now();
+    var years = opts.years || 20;
+    var endWin = now + years * 365.25 * 86400000;
+    var rows = [];
+    (opts.timeline.ads || []).forEach(function (ad) {
+      if (ad.endMs <= now || ad.startMs >= endWin) return;
+      dasha.subPeriods(ad.lord, ad.startMs, ad.endMs - ad.startMs).forEach(function (pd) {
+        if (pd.endMs <= now || pd.startMs >= endWin) return;
+        var md = ad.mdLord, adl = ad.lord, pdl = pd.lord;
+        rows.push({
+          md: md, ad: adl, pd: pdl,
+          label: ABBR[md] + " - " + ABBR[adl] + " - " + ABBR[pdl],
+          startMs: pd.startMs, endMs: pd.endMs,
+          range: fmt(Math.max(pd.startMs, now)) + " - " + fmt(pd.endMs),
+          area: areaOf(md, adl, pdl),
+          parScore: Math.round(sev(pW, md, adl, pdl) * 10) / 10,
+          kpScore: Math.round(sev(kW, md, adl, pdl) * 10) / 10,
+          midMs: (Math.max(pd.startMs, now) + pd.endMs) / 2,
+          current: now >= pd.startMs && now < pd.endMs
+        });
+      });
+    });
+    rows.sort(function (a, b) { return a.startMs - b.startMs; });
+
+    // ---- normalise per chart (relative severity within the 20-year window) ----
+    var maxPar = 0.001, maxKp = 0.001;
+    rows.forEach(function (r) { if (r.parScore > maxPar) maxPar = r.parScore; if (r.kpScore > maxKp) maxKp = r.kpScore; });
+    function bandPct(pct) {
+      if (pct >= 0.85) return { label: "Fatal", klass: "fatal" };
+      if (pct >= 0.68) return { label: "Adverse", klass: "adverse" };
+      if (pct >= 0.50) return { label: "High", klass: "high" };
+      if (pct >= 0.30) return { label: "Moderate", klass: "moderate" };
+      return { label: "Low", klass: "low" };
+    }
+    rows.forEach(function (r) {
+      var pp = r.parScore / maxPar, kpp = r.kpScore / maxKp;
+      r.par = gated(bandPct(pp), r.md, r.ad);
+      r.kp = gated(bandPct(kpp), r.md, r.ad);
+      r.parVit = clamp(Math.round(100 - pp * 92), 6, 100);
+      r.kpVit = clamp(Math.round(100 - kpp * 92), 6, 100);
+    });
+
+    return { rows: rows, startMs: now, endMs: endWin, years: years };
+  }
+
+  var api = { analyze: analyze, fmt: fmt };
+  root.AHS = root.AHS || {};
+  root.AHS.healthTimeline = api;
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+})(typeof window !== "undefined" ? window : globalThis);
+
+
 /* ===== js/health-topics.js ===== */
 /*
  * health-topics.js
@@ -3732,6 +3927,7 @@ button.ghost { background: transparent; }
   var shadbala = window.AHS.shadbala;
   var neecha = window.AHS.neecha;
   var accident = window.AHS.accident;
+  var healthTimeline = window.AHS.healthTimeline;
 
   var qaContext = null; // populated after a screening is generated
   var logoDataUrl = null; // letterhead logo, read client-side
@@ -4219,6 +4415,57 @@ button.ghost { background: transparent; }
     c.appendChild(el("p", "hint", "Accident timing is probabilistic; treat sensitive windows as cues for extra caution (driving, sports, machinery), not as predictions."));
   }
 
+  function renderTimeline(t) {
+    $("timeline-range").textContent = healthTimeline.fmt(t.startMs) + " \u2013 " + healthTimeline.fmt(t.endMs);
+    // table
+    var tbody = $("timeline-table").querySelector("tbody");
+    tbody.innerHTML = "";
+    t.rows.forEach(function (r) {
+      tbody.appendChild(el("tr", r.current ? "row-current" : null,
+        "<td>" + (r.current ? "<strong>&#9654; </strong>" : "") + r.label + "</td>" +
+        "<td>" + r.range + "</td>" +
+        "<td>" + r.area + "</td>" +
+        "<td><span class='band " + r.par.klass + "'>" + r.par.label + "</span></td>" +
+        "<td><span class='band " + r.kp.klass + "'>" + r.kp.label + "</span></td>"));
+    });
+    renderTimelineGraph(t);
+  }
+
+  function renderTimelineGraph(t) {
+    var W = 1000, H = 360, ML = 44, MR = 14, MT = 22, MB = 30;
+    var pw = W - ML - MR, ph = H - MT - MB;
+    var span = t.endMs - t.startMs || 1;
+    function X(ms) { return ML + (ms - t.startMs) / span * pw; }
+    function Y(v) { return MT + (1 - v / 100) * ph; }
+    var s = "<svg viewBox='0 0 " + W + " " + H + "' class='timeline-svg' preserveAspectRatio='xMidYMid meet'>";
+    // y gridlines + labels
+    [0, 25, 50, 75, 100].forEach(function (v) {
+      var y = Y(v);
+      s += "<line x1='" + ML + "' y1='" + y.toFixed(1) + "' x2='" + (W - MR) + "' y2='" + y.toFixed(1) + "' stroke='#313a6b' stroke-width='0.7'/>";
+      s += "<text x='" + (ML - 6) + "' y='" + (y + 3).toFixed(1) + "' text-anchor='end' font-size='10' fill='#9aa3cf'>" + v + "</text>";
+    });
+    // x year ticks
+    var startYr = new Date(t.startMs).getUTCFullYear(), endYr = new Date(t.endMs).getUTCFullYear();
+    for (var yr = startYr; yr <= endYr; yr += 2) {
+      var ms = Date.UTC(yr, 0, 1);
+      if (ms < t.startMs || ms > t.endMs) continue;
+      var x = X(ms);
+      s += "<line x1='" + x.toFixed(1) + "' y1='" + MT + "' x2='" + x.toFixed(1) + "' y2='" + (H - MB) + "' stroke='#262c52' stroke-width='0.6'/>";
+      s += "<text x='" + x.toFixed(1) + "' y='" + (H - MB + 16) + "' text-anchor='middle' font-size='10' fill='#9aa3cf'>" + yr + "</text>";
+    }
+    function poly(key, color) {
+      var pts = t.rows.map(function (r) { return X(r.midMs).toFixed(1) + "," + Y(r[key]).toFixed(1); }).join(" ");
+      return "<polyline points='" + pts + "' fill='none' stroke='" + color + "' stroke-width='2'/>";
+    }
+    s += poly("parVit", "#7c83f7"); // Parashara - indigo
+    s += poly("kpVit", "#f2c46d");  // KP - gold
+    // legend
+    s += "<rect x='" + (ML + 6) + "' y='" + (MT + 4) + "' width='12' height='4' fill='#7c83f7'/><text x='" + (ML + 22) + "' y='" + (MT + 9) + "' font-size='11' fill='#e9ecf8'>Parashara vitality</text>";
+    s += "<rect x='" + (ML + 150) + "' y='" + (MT + 4) + "' width='12' height='4' fill='#f2c46d'/><text x='" + (ML + 166) + "' y='" + (MT + 9) + "' font-size='11' fill='#e9ecf8'>KP vitality</text>";
+    s += "</svg>";
+    $("timeline-graph").innerHTML = s;
+  }
+
   function renderForecastHighlight(fc) {
     var c = $("forecast-highlight");
     c.hidden = false;
@@ -4667,6 +4914,9 @@ button.ghost { background: transparent; }
       if (f.unknownTime) {
         $("parashara-out").innerHTML = "<h3>Parashara Health Analysis</h3><p class='hint'>House-based analysis needs a birth time. Enter the time of birth to enable the full Parashara &amp; KP screening. Planetary sign/nakshatra placements above are still valid.</p>";
         $("accident-out").innerHTML = "<h3>Accident &amp; Injury Risk</h3><p class='hint'>Accident analysis uses houses (1/4/6/8) and needs an accurate birth time.</p>";
+        $("timeline-graph").innerHTML = "";
+        $("timeline-table").querySelector("tbody").innerHTML = "";
+        $("timeline-range").textContent = "(needs birth time)";
         $("kp-out").innerHTML = "<h3>KP Health Analysis</h3><p class='hint'>KP relies on house cusps, which require an accurate birth time.</p>";
         $("risk-level").textContent = "n/a*";
         $("d6-score").textContent = "n/a*";
@@ -4677,7 +4927,8 @@ button.ghost { background: transparent; }
       } else {
         renderParashara(parRes);
         renderKP(kpRes);
-        renderAccident(accident.analyze(natal, { d6: d6chart, timeline: qaTimeline, transit: transit, nowMs: Date.now() }));
+        var accRes = accident.analyze(natal, { d6: d6chart, timeline: qaTimeline, transit: transit, nowMs: Date.now() });
+        renderAccident(accRes);
         $("d6-score").textContent = d6Res.score;
         fc = predict.forecast(natal, dz, { d22Lord: d22.lord, n64Lord: n64.lord }, { d6: d6chart, shadbala: shadbala.statusMap(sb), neechaCancelled: neecha.cancelledSet(neechaRes), transit: transit });
         var rl = $("risk-level");
@@ -4689,6 +4940,8 @@ button.ghost { background: transparent; }
         renderKPDasha(kpdasha.analyze(natal, dz));
         renderKPSchedule(kpdasha.schedule(natal, qaTimeline, Date.now()));
         renderShadbala(sb, shadbala.healthAnalysis(sb));
+        var tlRes = healthTimeline.analyze(natal, { timeline: qaTimeline, maraka: { d22Lord: d22.lord, n64Lord: n64.lord }, neechaCancelled: neecha.cancelledSet(neechaRes), accidentProne: accRes.score >= 4.5, nowMs: Date.now(), years: 20 });
+        renderTimeline(tlRes);
       }
 
       // Enable the Ask-a-Question module with a ready context.

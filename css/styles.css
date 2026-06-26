@@ -150,6 +150,17 @@ button.ghost { background: transparent; }
 .data-table th { color: var(--gold); font-weight: 600; }
 .data-table tbody tr:hover { background: var(--card-2); }
 .data-table tr.row-current { background: rgba(124,131,247,.14); }
+
+/* Severity bands (20-year timeline) */
+.band { display:inline-block; padding:2px 9px; border-radius:6px; font-size:.72rem; font-weight:700; }
+.band.low { background:rgba(87,201,138,.2); color:var(--green); }
+.band.moderate { background:rgba(232,184,75,.2); color:var(--amber); }
+.band.high { background:rgba(240,150,70,.25); color:#f0a050; }
+.band.adverse { background:rgba(239,106,106,.22); color:var(--red); }
+.band.fatal { background:rgba(150,20,40,.55); color:#ffd0d0; }
+.table-scroll.tall { max-height:480px; overflow:auto; }
+.table-scroll.tall thead th { position:sticky; top:0; background:var(--card); z-index:1; }
+.timeline-svg { width:100%; height:auto; background:var(--bg-2); border:1px solid var(--line); border-radius:8px; }
 .sub { font-size: .85rem; color: var(--muted); font-weight: normal; margin-left: 8px; }
 
 .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .72rem; font-weight: 700; }

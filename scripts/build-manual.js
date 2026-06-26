@@ -144,6 +144,9 @@ var BLOCKS = [
   h3("Confluence (trigger activates a promise)"),
   li("If a current dasha/transit trigger is also a promised-afflicted planet, its body-part weight is multiplied by 1.6 and the risk rises sharply."),
   param("Risk score", "promiseMagnitude x0.5 + confluenceStrength x1.8 + bare-trigger x0.3 + transit-hits x0.4. Bands: >=9 Elevated, >=5 Moderate, else Lower. Thus a strong promise that is currently triggered (confluence) reads highest; triggers alone, with no promise, stay low."),
+  h2("13a. 20-year health timeline"),
+  p("A forward 20-year chart at Pratyantar (3-level) granularity scores EVERY period independently under both Parashara and KP, considering the 22nd Drekkana and 64th Navamsa. A per-planet disease weight is precomputed from the natal charts (the promise): Parashara from dusthana placement/ownership, 6th/8th/maraka lordship, uncancelled debilitation and the Khara points; KP from the PRIMARY (star-lord) significations of 6/8/12 minus 1/5/11, plus the Khara points. A period's severity = 3 x (Maha lord weight) + 2 x (Antar) + 1 x (Pratyantar)."),
+  p("Severity is normalised within the 20-year window and banded Low / Moderate / High / Adverse / Fatal for each system. 'Fatal' is gated - it appears only when the Maha or Antar lord is a maraka lord (2nd/7th/8th lord or a Khara point) - and denotes the astrologically most demanding windows, NOT a prediction of death. Each row also lists the area of concern (body parts, plus 'accident risk' and 'mind/emotions' tags). The accompanying graph plots vitality (100 - normalised severity) over time, Parashara in indigo and KP in gold."),
 
   h1("14. Ask-a-Question module"),
   p("A free-text question is classified into a health topic (heart, cancer, diabetes, kidney, liver, mental, accident, BP, respiratory, joints, skin, digestive, eye, reproductive, thyroid, neuro, infection, or general). Each topic defines its karaka planets, houses, malefic triggers and body parts."),

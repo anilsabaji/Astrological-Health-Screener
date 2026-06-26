@@ -19,6 +19,7 @@
   var shadbala = window.AHS.shadbala;
   var neecha = window.AHS.neecha;
   var accident = window.AHS.accident;
+  var healthTimeline = window.AHS.healthTimeline;
 
   var qaContext = null; // populated after a screening is generated
   var logoDataUrl = null; // letterhead logo, read client-side
@@ -506,6 +507,57 @@
     c.appendChild(el("p", "hint", "Accident timing is probabilistic; treat sensitive windows as cues for extra caution (driving, sports, machinery), not as predictions."));
   }
 
+  function renderTimeline(t) {
+    $("timeline-range").textContent = healthTimeline.fmt(t.startMs) + " \u2013 " + healthTimeline.fmt(t.endMs);
+    // table
+    var tbody = $("timeline-table").querySelector("tbody");
+    tbody.innerHTML = "";
+    t.rows.forEach(function (r) {
+      tbody.appendChild(el("tr", r.current ? "row-current" : null,
+        "<td>" + (r.current ? "<strong>&#9654; </strong>" : "") + r.label + "</td>" +
+        "<td>" + r.range + "</td>" +
+        "<td>" + r.area + "</td>" +
+        "<td><span class='band " + r.par.klass + "'>" + r.par.label + "</span></td>" +
+        "<td><span class='band " + r.kp.klass + "'>" + r.kp.label + "</span></td>"));
+    });
+    renderTimelineGraph(t);
+  }
+
+  function renderTimelineGraph(t) {
+    var W = 1000, H = 360, ML = 44, MR = 14, MT = 22, MB = 30;
+    var pw = W - ML - MR, ph = H - MT - MB;
+    var span = t.endMs - t.startMs || 1;
+    function X(ms) { return ML + (ms - t.startMs) / span * pw; }
+    function Y(v) { return MT + (1 - v / 100) * ph; }
+    var s = "<svg viewBox='0 0 " + W + " " + H + "' class='timeline-svg' preserveAspectRatio='xMidYMid meet'>";
+    // y gridlines + labels
+    [0, 25, 50, 75, 100].forEach(function (v) {
+      var y = Y(v);
+      s += "<line x1='" + ML + "' y1='" + y.toFixed(1) + "' x2='" + (W - MR) + "' y2='" + y.toFixed(1) + "' stroke='#313a6b' stroke-width='0.7'/>";
+      s += "<text x='" + (ML - 6) + "' y='" + (y + 3).toFixed(1) + "' text-anchor='end' font-size='10' fill='#9aa3cf'>" + v + "</text>";
+    });
+    // x year ticks
+    var startYr = new Date(t.startMs).getUTCFullYear(), endYr = new Date(t.endMs).getUTCFullYear();
+    for (var yr = startYr; yr <= endYr; yr += 2) {
+      var ms = Date.UTC(yr, 0, 1);
+      if (ms < t.startMs || ms > t.endMs) continue;
+      var x = X(ms);
+      s += "<line x1='" + x.toFixed(1) + "' y1='" + MT + "' x2='" + x.toFixed(1) + "' y2='" + (H - MB) + "' stroke='#262c52' stroke-width='0.6'/>";
+      s += "<text x='" + x.toFixed(1) + "' y='" + (H - MB + 16) + "' text-anchor='middle' font-size='10' fill='#9aa3cf'>" + yr + "</text>";
+    }
+    function poly(key, color) {
+      var pts = t.rows.map(function (r) { return X(r.midMs).toFixed(1) + "," + Y(r[key]).toFixed(1); }).join(" ");
+      return "<polyline points='" + pts + "' fill='none' stroke='" + color + "' stroke-width='2'/>";
+    }
+    s += poly("parVit", "#7c83f7"); // Parashara - indigo
+    s += poly("kpVit", "#f2c46d");  // KP - gold
+    // legend
+    s += "<rect x='" + (ML + 6) + "' y='" + (MT + 4) + "' width='12' height='4' fill='#7c83f7'/><text x='" + (ML + 22) + "' y='" + (MT + 9) + "' font-size='11' fill='#e9ecf8'>Parashara vitality</text>";
+    s += "<rect x='" + (ML + 150) + "' y='" + (MT + 4) + "' width='12' height='4' fill='#f2c46d'/><text x='" + (ML + 166) + "' y='" + (MT + 9) + "' font-size='11' fill='#e9ecf8'>KP vitality</text>";
+    s += "</svg>";
+    $("timeline-graph").innerHTML = s;
+  }
+
   function renderForecastHighlight(fc) {
     var c = $("forecast-highlight");
     c.hidden = false;
@@ -954,6 +1006,9 @@
       if (f.unknownTime) {
         $("parashara-out").innerHTML = "<h3>Parashara Health Analysis</h3><p class='hint'>House-based analysis needs a birth time. Enter the time of birth to enable the full Parashara &amp; KP screening. Planetary sign/nakshatra placements above are still valid.</p>";
         $("accident-out").innerHTML = "<h3>Accident &amp; Injury Risk</h3><p class='hint'>Accident analysis uses houses (1/4/6/8) and needs an accurate birth time.</p>";
+        $("timeline-graph").innerHTML = "";
+        $("timeline-table").querySelector("tbody").innerHTML = "";
+        $("timeline-range").textContent = "(needs birth time)";
         $("kp-out").innerHTML = "<h3>KP Health Analysis</h3><p class='hint'>KP relies on house cusps, which require an accurate birth time.</p>";
         $("risk-level").textContent = "n/a*";
         $("d6-score").textContent = "n/a*";
@@ -964,7 +1019,8 @@
       } else {
         renderParashara(parRes);
         renderKP(kpRes);
-        renderAccident(accident.analyze(natal, { d6: d6chart, timeline: qaTimeline, transit: transit, nowMs: Date.now() }));
+        var accRes = accident.analyze(natal, { d6: d6chart, timeline: qaTimeline, transit: transit, nowMs: Date.now() });
+        renderAccident(accRes);
         $("d6-score").textContent = d6Res.score;
         fc = predict.forecast(natal, dz, { d22Lord: d22.lord, n64Lord: n64.lord }, { d6: d6chart, shadbala: shadbala.statusMap(sb), neechaCancelled: neecha.cancelledSet(neechaRes), transit: transit });
         var rl = $("risk-level");
@@ -976,6 +1032,8 @@
         renderKPDasha(kpdasha.analyze(natal, dz));
         renderKPSchedule(kpdasha.schedule(natal, qaTimeline, Date.now()));
         renderShadbala(sb, shadbala.healthAnalysis(sb));
+        var tlRes = healthTimeline.analyze(natal, { timeline: qaTimeline, maraka: { d22Lord: d22.lord, n64Lord: n64.lord }, neechaCancelled: neecha.cancelledSet(neechaRes), accidentProne: accRes.score >= 4.5, nowMs: Date.now(), years: 20 });
+        renderTimeline(tlRes);
       }
 
       // Enable the Ask-a-Question module with a ready context.
