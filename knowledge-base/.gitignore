@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Keep generated full-text extracts out of git by default.
+# Comment this out if you WANT clones to get full-text search without rebuilding.
+index/text/
